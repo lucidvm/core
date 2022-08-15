@@ -1,0 +1,22 @@
+{
+  "name": "@lucidvm/conduit",
+  "version": "0.1.0",
+  "description": "event conduits",
+  "main": "dist/index.js",
+  "author": "dither",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.3",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@lucidvm/shared": "../shared",
+    "buffer": "^6.0.3",
+    "events": "^3.3.0",
+    "ws": "^8.8.1"
+  }
+}
