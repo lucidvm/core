@@ -579,8 +579,8 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     abstract getFrameBuffer(): Buffer;
-    protected setMouse(x: number, y: number, buttons: number): void { }
-    protected setKey(keycode: number, on: boolean): void { }
+    protected abstract setMouse(x: number, y: number, buttons: number): void;
+    protected abstract setKey(keycode: number, on: boolean): void;
     protected doReset(): void { }
     protected pushFile(name: string, data: Buffer, autorun: boolean): void { }
     protected think(): void { }

@@ -7,3 +7,5 @@
 - **src/core**: the actual server, core message plumbing, layer 5 stuff
 
 - **src/db**: database wrapper; also implements an `AuthDriver` for the `local` authentication strategy
+
+- **src/protocol**: vm->gateway tunnel protocol adapters

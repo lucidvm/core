@@ -2,7 +2,11 @@
 
 CollabVM's protocol is made up of loose nonstandard extensions to the protocol used by [Guacamole](https://guacamole.apache.org/). However, as CollabVM is open source and the wire protocol itself is relatively simple, it has been reverse engineered by multiple independent parties, resulting in many client applications and even a few servers that (re)implement it.
 
-As CollabVM 3.x will probably use an entirely different wire protocol by default, potentially without any support for the one described in this document, it may eventually become obsolete from the perspective of CollabVM itself. However, LucidVM will continue to use a backwards-compatible variant of this protocol for the foreseeable future, with any deviation away from it being clientside opt-in.
+CollabVM 3.x will probably use an entirely different wire protocol by default, potentially without any support for the one described in this document. However, LucidVM will continue to use a backwards-compatible variant of this protocol for the foreseeable future, with any deviation away from it being clientside opt-in.
+
+Since CollabVM's protocol is bespoke for the CollabVM project, there is no real "standard". This file aims to describe what has been observed in practice, and to document potential pitfalls in implementing a compatible application.
+
+In spite of the lack of standardization or even an official name, the CollabVM 1.2 protocol may be referred to hereafter (and in other documents) as "CVMP" for brevity.
 
 ### **Type names used here**
 - `string`: a string value
@@ -15,9 +19,11 @@ See `layer6.md` for details on how instructions are encoded.
 
 ## Guacamole
 
-Guacamole lays the basic foundation for the CollabVM protocol. CollabVM is not protocol-compatible with Guacamole as it deviates from the protocol in several places and only uses a subset of the available operations in practice. Only the instructions most relevant to implementing a CollabVM-compatible client or server will be described here.
+Guacamole lays the basic foundation for the CollabVM protocol. Many of the basic Guacamole commands form its core, and Guacamole's own weird encoding is used to carry them over WebSocket (though LucidVM extensions allow the use of more efficient ones).
 
-A full Guacamole client is capable of drawing an arbitrary number of layers, but for CollabVM, layer 0 is the most important as it is used as the framebuffer. Layer 1 is used to draw the cursor.
+However, CollabVM is not protocol-compatible with Guacamole. It deviates from the protocol in several places and only uses a subset of the available operations in practice. Only the instructions most relevant to implementing a CollabVM-compatible client or server will be described here..
+
+A full Guacamole client is capable of drawing an arbitrary number of layers, but for CollabVM, layer 0 is the most important as it is used as the framebuffer. Layer 1 is generally used to draw the cursor.
 
 Essentially all base commands are unidirectional (i.e. only sent by the client or server exclusively).
 

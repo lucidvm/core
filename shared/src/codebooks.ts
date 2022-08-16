@@ -37,8 +37,19 @@ export namespace Codebooks {
     ];
 
     export const MonitorGateway = [
-        "nop",
+        "ping",
+        "sync",
+        "rect",
+        "resize",
+        "cursor",
+        "mouse",
+        "key",
+        "tunnel",
+        "cap",
+        "auth",
+        "list",
         "connect",
+        "disconnect",
         "reset",
         "file"
     ];

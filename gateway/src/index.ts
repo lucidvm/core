@@ -35,7 +35,7 @@ db.init().then(async () => {
     const machines = await db.getAllMachines();
     for (const info of machines) {
         console.log("adding " + info.channel);
-        const machine = new RemoteMachine(gw, info.channel, info.monitorAddress, true);
+        const machine = new RemoteMachine(gw, info.channel, info.monitorAddress);
         machine.loadConfig(info);
         gw.registerController(machine);
     }
