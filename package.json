@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "LucidVM Monorepo",
     "author": "dither",
+    "license": "BSD-3-Clause",
     "private": true,
     "scripts": {
         "build-shared": "cd shared && yarn -D && yarn build && cd ../conduit && yarn -D && yarn build && cd ..",

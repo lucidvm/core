@@ -1,10 +1,10 @@
 {
   "name": "@lucidvm/shared",
   "version": "0.1.0",
-  "description": "misc stuff",
+  "description": "LucidVM shared code",
   "main": "dist/index.js",
   "author": "dither",
-  "license": "UNLICENSED",
+  "license": "BSD-3-Clause",
   "private": true,
   "scripts": {
     "build": "tsc"

@@ -1,10 +1,10 @@
 {
   "name": "@lucidvm/conduit",
   "version": "0.1.0",
-  "description": "event conduits",
+  "description": "Layer 6 abstractions used by LucidVM",
   "main": "dist/index.js",
   "author": "dither",
-  "license": "UNLICENSED",
+  "license": "BSD-3-Clause",
   "private": true,
   "scripts": {
     "build": "tsc"
