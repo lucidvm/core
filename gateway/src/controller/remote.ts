@@ -9,11 +9,11 @@ import { ensureBoolean, ensureNumber, ensureString, wireprim, LECClient } from "
 import type { EventGateway } from "../core";
 
 import { BaseMachine } from "./machine";
-import { ProtocolAdapter, VNCAdapter } from "../protocol";
+import { ProtocolAdapter, VNCAdapter, LRMPClient } from "../protocol";
 
 export class RemoteMachine extends BaseMachine {
 
-    private lec: LECClient = new LECClient(Codebooks.MonitorGateway);
+    private client: LRMPClient;
     private adapter: ProtocolAdapter;
 
     private thumbcanvas: Canvas;
@@ -25,40 +25,28 @@ export class RemoteMachine extends BaseMachine {
     ) {
         super(gw, chan);
 
-        this.lec.on("open", () => {
-            this.lec.send("connect", chan);
+        this.client = new LRMPClient(chan);
+        this.client.onCaps(caps => {
+            // TODO
+            console.log("supported caps", caps);
         });
-        this.lec.on("event", (op: string, ...args: wireprim[]) => {
-            switch (op) {
-                case "ping":
-                    this.lec.send("ping");
+        this.client.onReject(() => {
+            console.error("monitor rejected the connection");
+        });
+        this.client.onTunnel((proto, details) => {
+            switch (proto) {
+                case "vnc":
+                    console.log("got vnc details from monitor");
+                    const url = new URL(ensureString(details));
+                    this.setAdapter(new VNCAdapter(url.hostname, +url.port,
+                        url.hash.length > 1 ? url.hash.substring(1) : null));
                     break;
-                case "cap":
-                    // TODO
-                    break;
-                case "tunnel":
-                    switch (ensureString(args[0])) {
-                        case "vnc":
-                            console.log("got vnc details from monitor");
-                            const url = new URL(ensureString(args[1]));
-                            this.setAdapter(new VNCAdapter(url.hostname, +url.port,
-                                url.hash.length > 1 ? url.hash.substring(1) : null));
-                            break;
-                        case "inband":
-                            // TODO
-                            break;
-                    }
-                    break;
-                case "connect":
-                    if (ensureBoolean(args[0])) {
-                        // an error occurred
-                        console.error("monitor rejected connect request");
-                        return;
-                    }
+                case "inband":
+                    this.setAdapter(this.client);
                     break;
             }
         });
-        this.lec.connect(monitor);
+        this.client.lec.connect(monitor);
     }
 
     protected setAdapter(adapter: ProtocolAdapter) {
@@ -111,11 +99,11 @@ export class RemoteMachine extends BaseMachine {
     }
 
     protected override doReset() {
-        this.lec.send("reset");
+        this.client.doReset();
     }
 
     protected override async pushFile(name: string, data: Buffer, autorun: boolean) {
-        this.lec.send("file", name, data, autorun);
+        this.client.pushFile(name, data, autorun);
     }
 
     protected override setMouse(x: number, y: number, buttons: number) {

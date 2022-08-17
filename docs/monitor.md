@@ -78,8 +78,8 @@ Draws an image at the specified position in the framebuffer. The image should id
 #### `sync()`
 Flushes any outstanding display updates.
 
-#### `cursor(image:buffer)`
-Updates the pseudocursor framebuffer. Should be a PNG image.
+#### `cursor(hx:num, hy:num, width:num, height:num, image:buffer)`
+Updates the pseudocursor framebuffer. Image data is in raw RGBA format.
 
 
 ### **Gateway -> Monitor**
