@@ -1,6 +1,6 @@
 export namespace Codebooks {
 
-    export const EventGateway = [
+    export const CVMP = [
         // base part 1
         "nop",
     
@@ -36,7 +36,7 @@ export namespace Codebooks {
         "strip"
     ];
 
-    export const MonitorGateway = [
+    export const LRMP = [
         "ping",
         "sync",
         "rect",

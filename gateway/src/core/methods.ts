@@ -168,7 +168,7 @@ export const defaultMethods: {
                 next = new JSONConduit();
                 break;
             case "lec":
-                next = new LECConduit(Codebooks.EventGateway);
+                next = new LECConduit(Codebooks.CVMP);
                 break;
             default:
                 ctx.send("upgrade", false);

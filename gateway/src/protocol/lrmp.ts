@@ -14,7 +14,7 @@ export class LRMPClient extends ProtocolAdapter {
     private canvas: Canvas = new Canvas(640, 480);
     private shadow: CanvasRenderingContext2D = this.canvas.getContext("2d");
 
-    readonly lec: LECClient = new LECClient(Codebooks.MonitorGateway);
+    readonly lec: LECClient = new LECClient(Codebooks.LRMP);
 
     constructor(chan: string) {
         super();
