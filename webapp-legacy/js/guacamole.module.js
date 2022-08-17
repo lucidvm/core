@@ -6128,7 +6128,7 @@ Guacamole.WebSocketTunnel = function(tunnelURL) {
                                     conduit = new GuacConduit();
                                     break;
                                 case "lec":
-                                    conduit = new LECConduit(Codebooks.EventGateway);
+                                    conduit = new LECConduit(Codebooks.CVMP);
                                     break;
                                 default:
                                     close_tunnel(new Guacamole.Status(Guacamole.Status.Code.SERVER_ERROR, "server asked us to upgrade to an mystery encoding " + instr[1]));
