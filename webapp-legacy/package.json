@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@lucidvm/conduit": "../conduit",
-        "@lucidvm/shared": "../shared"
+        "@lucidvm/shared": "../shared",
+        "opus-decoder": "^0.5.2"
     }
 }

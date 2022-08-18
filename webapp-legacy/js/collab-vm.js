@@ -3,6 +3,7 @@ import { en_us_qwerty_keyboard } from "./en-us-qwerty";
 
 import { getCookie, setCookie } from "./util";
 import { extendedInit, extendedSetup } from "./lucid";
+import { initHurl } from "./hurl";
 
 import { History } from "./jquery.history.js";
 
@@ -476,6 +477,7 @@ function updateVMList(list) {
 					var name =  this.getAttribute("href").substr(this.getAttribute("href").lastIndexOf('/')+1);
 					common.debugLog("connect " + name);
 					vmName = name;
+					initHurl("ws://" + common.serverAddress + "/audio", vmName);
 					tunnel.sendMessage("connect", vmName);
 				}
 			});
@@ -1074,7 +1076,7 @@ function InitalizeGuacamoleClient() {
     extendedInit(guac, tunnel);
 }
 
-window.multicollab = function(ip) {
+/*window.multicollab = function(ip) {
 	var connTunnel = new Guacamole.WebSocketTunnel('ws://' + ip + '/');
 	
 	connTunnel.onstatechange = function(code) {
@@ -1177,7 +1179,7 @@ window.multicollab = function(ip) {
 	};
 	
 	listGuac.connect();
-}
+}*/
 
 $(window).on("statechange", function() {
 	common.debugLog("statechange callled");
