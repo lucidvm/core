@@ -254,15 +254,19 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     // clear a user's vote
-    private clearVote(ctx: ClientContext) {
+    private clearVote(ctx: ClientContext): boolean {
+        var hadone = false;
         const y = this.voteAyes.indexOf(ctx);
         if (y !== -1) {
             this.voteAyes.splice(y, 1);
+            hadone = true;
         }
         const n = this.voteNays.indexOf(ctx);
         if (n !== -1) {
             this.voteNays.splice(n, 1);
+            hadone = true;
         }
+        return hadone;
     }
 
     // records a user's vote as yes
@@ -446,13 +450,13 @@ export abstract class BaseMachine extends ChannelController {
             MAX_UPLOAD_NAME             // max filename length
         );
 
-        // ugly way of giving some time for automated handshaking
-        if (this.gw.authMandate && ctx.rank <= UserRank.Anonymous) {
-            setTimeout(() => {
-                if (ctx.rank <= UserRank.Anonymous) {
-                    ctx.send("chat", "", "Authentication is mandatory on this server. Please log in.");    
-                }
-            }, 250);
+        // send vote state
+        if (this.voteActive) {
+            ctx.send("vote", VOTE_STATUS,
+                Math.max(0, this.voteEnd - Date.now()),
+                this.voteAyes.length,
+                this.voteNays.length
+            );
         }
 
         // send initial screen data
@@ -470,6 +474,15 @@ export abstract class BaseMachine extends ChannelController {
             ctx.send("move", LAYER_PSEUDOCURSOR, 0, this.cursorMetrics.x, this.cursorMetrics.y, 0);
         }
 
+        // ugly way of giving some time for automated handshaking
+        if (this.gw.authMandate && ctx.rank <= UserRank.Anonymous) {
+            setTimeout(() => {
+                if (ctx.rank <= UserRank.Anonymous) {
+                    ctx.send("chat", "", "Authentication is mandatory on this server. Please log in.");    
+                }
+            }, 250);
+        }
+
         this.emit(MachineEvents.UserJoin, ctx);
     }
 
@@ -483,7 +496,9 @@ export abstract class BaseMachine extends ChannelController {
         }
         
         // remove any votes
-        this.clearVote(ctx);
+        if (this.clearVote(ctx)) {
+            this.voteUpdate();
+        }
 
         this.emit(MachineEvents.UserPart, ctx);
     }

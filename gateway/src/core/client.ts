@@ -95,7 +95,6 @@ export class ClientContext {
     setIdentity(identity: ClientIdentity) {
         this.rank = identity.rank;
         if (this.channel != null) {
-            this.gw.send(this.channel, "remuser", 1, this.nick);
             this.gw.send(this.channel, "adduser", 1, this.nick, this.rank);
             this.gw.getController(this.channel)?.notifyIdentify(this);
         }

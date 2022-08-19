@@ -87,10 +87,6 @@ export const defaultMethods: {
             }
             ctx.sendRename(nick, RENAME_OK);
             ctx.gw.sendExclude(ctx.channel, ctx, "rename", true, ctx.nick, nick);
-
-            // workaround for vanilla 1.2 frontend bug related to losing visible rank on rename
-            ctx.send("remuser", 1, nick, ctx.rank);
-            ctx.send("adduser", 1, nick, ctx.rank);
         }
         const oldnick = ctx.nick;
         ctx.nick = nick;
