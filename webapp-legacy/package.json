@@ -14,8 +14,8 @@
         "parcel": "^2.7.0"
     },
     "dependencies": {
-        "@lucidvm/conduit": "../conduit",
-        "@lucidvm/shared": "../shared",
+        "@lucidvm/conduit": "link:../conduit",
+        "@lucidvm/shared": "link:../shared",
         "opus-decoder": "^0.5.2"
     }
 }

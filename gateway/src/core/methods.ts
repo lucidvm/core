@@ -61,6 +61,9 @@ export const defaultMethods: {
             ctx.gw.getController(chan)?.notifyPart(ctx);
             ctx.gw.send(chan, "remuser", 1, ctx.nick);
         }
+        if (!internal) {
+            ctx.send("connect", 2);
+        }
     },
 
     list(ctx) {
@@ -74,12 +77,14 @@ export const defaultMethods: {
     },
 
     rename(ctx, nick: wirestr) {
-        if (nick == null) return;
+        if (nick == null) {
+            nick = ctx.guestify();
+        }
+        else {
+            // sanitize that name!
+            nick = he.encode(nick);
+        }
 
-        // sanitize that name!
-        nick = he.encode(nick);
-
-        if (nick.toLowerCase() === ctx.nick.toLowerCase()) return;
         if (ctx.channel != null) {
             if (ctx.gw.nickInUse(ctx.channel, nick)) {
                 ctx.sendRename(ctx.nick, RENAME_INUSE);
@@ -91,6 +96,10 @@ export const defaultMethods: {
             // workaround for vanilla 1.2 frontend bug related to losing visible rank on rename
             ctx.send("adduser", 1, nick, ctx.rank);
         }
+        else {
+            ctx.sendRename(nick, RENAME_OK);
+        }
+
         const oldnick = ctx.nick;
         ctx.nick = nick;
         ctx.gw.getController(ctx.channel)?.notifyNick(ctx, oldnick);
@@ -146,7 +155,7 @@ export const defaultMethods: {
     },
 
 
-    // V1 extensions
+    // lucid-1 extensions
 
     // declare protocol extension support
     extend(ctx, magic: wirestr, level: wirenum) {
@@ -175,6 +184,17 @@ export const defaultMethods: {
         }
         ctx.send("upgrade", true, target);
         ctx.conduit = next;
+    },
+
+    // retrieve the LEC codebook for this session
+    codebook(ctx) {
+        if (ctx.conduit instanceof LECConduit) {
+            ctx.send("codebook", ...ctx.conduit.dumpCodebook());
+        }
+        else {
+            // send an empty codebook if we arent using LEC
+            ctx.send("codebook");
+        }
     },
 
     // authentication handshake
@@ -236,11 +256,18 @@ export const defaultMethods: {
         }
     },
 
+    // retrieve information about this instance
+    instance(ctx) {
+        // software, version, instance name, instance maintainer, instance contact details
+        // TODO: implement properly
+        ctx.send("instance", "LucidVM", "0.1.0-dev", "unset", "unset", "unset");
+    },
+
     // enable or disable sanitizing strings serverside
     // TODO: currently does nothing, needs quite a bit of reworking to implement
     strip(ctx, enable: boolean) {
         ctx.strip = enable;
         ctx.send("strip", enable);
-    }
+    },
 
 };

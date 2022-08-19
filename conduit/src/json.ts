@@ -18,6 +18,7 @@ export class JSONConduit implements EventConduit {
     }
 
     unpack(instr: string): wireprim[][] {
+        instr = instr.toString();
         return [JSON.parse(instr)];
     }
 

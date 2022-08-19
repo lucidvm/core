@@ -23,6 +23,8 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 - **shared**: Code shared between other components of the project (such as LEC event codebooks).
 
+- **client**: A CVMP client library geared towards LucidVM.
+
 ### Other
 
 - **docs**: Protocol documentation of LucidVM, CollabVM, and the subset of the Guacamole relevant to implementing monitors, clients, and servers compatible with LucidVM (and, if you are so inclined, vanilla CollabVM 1.2).

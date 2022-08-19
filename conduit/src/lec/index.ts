@@ -5,19 +5,16 @@ import type { EventConduit } from "../base";
 
 export class LECConduit implements EventConduit {
 
-    private readonly codebook: string[];
-    private readonly reverse: { [k: string]: number } = {};
+    private codebook: string[];
+    private reverse: { [k: string]: number } = {};
 
     constructor(codebook: string[] = []) {
-        this.codebook = codebook;
-        for (var i = 0; i < codebook.length; i++) {
-            this.reverse[codebook[i]] = i;
-        }
+        this.updateCodebook(codebook);
     }
 
     pack(...prims: wireprim[]): Uint8Array {
         var op = prims.shift();
-        if (typeof op === "string" && op in this.reverse) {
+        if (typeof op === "string" && op in this.reverse && op !== "codebook") {
             op = this.reverse[op];
         }
         return serialize([op, ...prims]);
@@ -36,6 +33,17 @@ export class LECConduit implements EventConduit {
             op = this.codebook[op];
         }
         return [[op, ...prims]];
+    }
+
+    dumpCodebook(): string[] {
+        return this.codebook.concat();
+    }
+
+    updateCodebook(codebook: string[]) {
+        this.codebook = codebook;
+        for (var i = 0; i < codebook.length; i++) {
+            this.reverse[codebook[i]] = i;
+        }
     }
 
 }

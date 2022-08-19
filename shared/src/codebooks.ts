@@ -33,7 +33,8 @@ export namespace Codebooks {
         "extend",
         "upgrade",
         "auth",
-        "strip"
+        "strip",
+        "instance"
     ];
 
     export const LRMP = [

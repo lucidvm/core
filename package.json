@@ -8,6 +8,7 @@
     "scripts": {
         "build-shared": "cd shared && yarn -D && yarn build && cd ../conduit && yarn -D && yarn build && cd ..",
         "build-gateway": "cd webapp-legacy && yarn -D && yarn build && cd ../gateway && yarn -D && yarn build && cd ..",
+        "build-client": "cd client && yarn -D && yarn build && cd ..",
         "build-all": "yarn build-shared && yarn build-gateway",
 
         "run-gateway": "node gateway/dist/index.js"

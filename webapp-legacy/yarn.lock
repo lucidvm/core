@@ -105,16 +105,13 @@
   resolved "https://registry.yarnpkg.com/@lmdb/lmdb-win32-x64/-/lmdb-win32-x64-2.5.2.tgz#28f643fbc0bec30b07fbe95b137879b6b4d1c9c5"
   integrity sha512-zrBczSbXKxEyK2ijtbRdICDygRqWSRPpZMN5dD1T8VMEW5RIhIbwFWw2phDRXuBQdVDpSjalCIUMWMV2h3JaZA==
 
-"@lucidvm/conduit@../conduit":
-  version "0.1.0"
-  dependencies:
-    "@lucidvm/shared" "../shared"
-    buffer "^6.0.3"
-    events "^3.3.0"
-    ws "^8.8.1"
+"@lucidvm/conduit@link:../conduit":
+  version "0.0.0"
+  uid ""
 
-"@lucidvm/shared@../shared":
-  version "0.1.0"
+"@lucidvm/shared@link:../shared":
+  version "0.0.0"
+  uid ""
 
 "@mischnic/json-sourcemap@^0.1.0":
   version "0.1.0"

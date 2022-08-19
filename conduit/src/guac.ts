@@ -40,6 +40,8 @@ export class GuacConduit implements EventConduit {
     }
 
     unpack(instr: string, unbonk = true): wireprim[][] {
+        instr = instr.toString();
+
         const payloads: string[][] = [];
         var payload: string[] = [];
     

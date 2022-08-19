@@ -11,16 +11,13 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@lucidvm/conduit@../conduit":
-  version "0.1.0"
-  dependencies:
-    "@lucidvm/shared" "../shared"
-    buffer "^6.0.3"
-    events "^3.3.0"
-    ws "^8.8.1"
+"@lucidvm/conduit@link:../conduit":
+  version "0.0.0"
+  uid ""
 
-"@lucidvm/shared@../shared":
-  version "0.1.0"
+"@lucidvm/shared@link:../shared":
+  version "0.0.0"
+  uid ""
 
 "@mapbox/node-pre-gyp@^1.0.0":
   version "1.0.9"
