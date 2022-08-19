@@ -244,6 +244,10 @@ export abstract class BaseMachine extends ChannelController {
         this.emit(MachineEvents.QueueUpdate, [...this.turnQueue]);
     }
 
+    private hasTurn(ctx: ClientContext) {
+        return ctx === this.turnQueue[0];
+    }
+
     // check if a user has voted
     private hasVoted(ctx: ClientContext) {
         return this.voteAyes.indexOf(ctx) >= 0 || this.voteNays.indexOf(ctx) >= 0;
@@ -557,23 +561,27 @@ export abstract class BaseMachine extends ChannelController {
                 }
                 break;
             case "mouse":
-                const x = ensureNumber(args[0]);
-                const y = ensureNumber(args[1]);
-                // sanity check: does the position even make sense?
-                //               guac likes sending insane values sometimes when moving away from screen
-                if (x < 0 || y < 0 || x >= this.lastWidth || y >= this.lastHeight) {
-                    break;
+                if (this.hasTurn(ctx)) {
+                    const x = ensureNumber(args[0]);
+                    const y = ensureNumber(args[1]);
+                    // sanity check: does the position even make sense?
+                    //               guac likes sending insane values sometimes when moving away from screen
+                    if (x < 0 || y < 0 || x >= this.lastWidth || y >= this.lastHeight) {
+                        break;
+                    }
+                    const d = ensureNumber(args[2]);
+                    this.cursorMetrics.x = x;
+                    this.cursorMetrics.y = y;
+                    this.moveCursor(x, y);
+                    this.setMouse(x, y, d);
                 }
-                const d = ensureNumber(args[2]);
-                this.cursorMetrics.x = x;
-                this.cursorMetrics.y = y;
-                this.moveCursor(x, y);
-                this.setMouse(x, y, d);
                 break;
             case "key":
-                const k = ensureNumber(args[0]);
-                const o = ensureBoolean(args[1]);
-                this.setKey(k, o);
+                if (this.hasTurn(ctx)) {
+                    const k = ensureNumber(args[0]);
+                    const o = ensureBoolean(args[1]);
+                    this.setKey(k, o);
+                }
                 break;
         }
     }
