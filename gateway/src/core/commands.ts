@@ -3,7 +3,6 @@ import he from "he";
 import type { ClientContext } from "./client";
 
 export function lex(source: string) {
-    //console.debug(source);
     const tokens: string[] = [];
     var current: string[] = [];
     for (var i = 0; i < source.length; i++) {

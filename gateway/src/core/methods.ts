@@ -49,9 +49,9 @@ export const defaultMethods: {
         ctx.gw.getController(ctx.channel)?.notifyJoin(ctx);
 
         // send channel peer list
-        // FIXME: dont send the whole list every time
         const peers = ctx.gw.getChannelClients(channel);
-        ctx.gw.send(channel, "adduser", peers.length, ...peers.map(x => [x.nick, x.rank]).flat());
+        ctx.send("adduser", peers.length, ...peers.map(x => [x.nick, x.rank]).flat());
+        ctx.gw.sendExclude(channel, ctx, "adduser", 1, ctx.nick, ctx.rank);
     },
 
     disconnect(ctx, internal: wirebool) {
@@ -89,6 +89,7 @@ export const defaultMethods: {
             ctx.gw.sendExclude(ctx.channel, ctx, "rename", true, ctx.nick, nick);
 
             // workaround for vanilla 1.2 frontend bug related to losing visible rank on rename
+            ctx.send("remuser", 1, nick, ctx.rank);
             ctx.send("adduser", 1, nick, ctx.rank);
         }
         const oldnick = ctx.nick;
@@ -124,7 +125,6 @@ export const defaultMethods: {
     },
 
     async admin(ctx, command: wirenum, data: wirestr) {
-        //console.log("admin")
         switch (ensureNumber(command)) {
             // repurpose the admin login prompt as an alternate way to access password auth
             case 2:

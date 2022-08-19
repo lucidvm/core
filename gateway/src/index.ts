@@ -5,6 +5,7 @@ import { User } from "./db/entities";
 import { EventGateway } from "./core";
 import { SimplePasswordDriver, UserRank } from "./auth";
 import { RemoteMachine } from "./controller";
+import { mountWebapp } from "./routes";
 
 // fire up the db
 const db = new DatabaseDriver();
@@ -22,6 +23,9 @@ db.init().then(async () => {
         ensureBoolean(await db.getOption(ConfigKey.AuthMandatory))
     );
     await gw.registerAuthDriver(db);
+
+    // mount additional routes
+    mountWebapp(gw.express);
 
     // register legacy driver if needed
     if (await db.getOption(ConfigKey.LegacyAuth)) {

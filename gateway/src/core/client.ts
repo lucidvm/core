@@ -53,7 +53,6 @@ export class ClientContext {
             try {
                 const stmts = this.conduit.unpack(x);
                 for (const stmt of stmts) {
-                    //console.log(stmt);
                     const opcode = ensureString(stmt.shift());
                     if (gw.authMandate && this.rank <= UserRank.Anonymous && !anonpermitted[opcode]) {
                         console.warn("rejected opcode " + opcode + " from unauthenticated user");
@@ -74,7 +73,6 @@ export class ClientContext {
             }
         });
         ws.on("close", () => {
-            //console.log("CLOSE");
             if (this.channel != null) {
                 // XXX: kind of ugly!
                 defaultMethods["disconnect"](this, true);
@@ -97,6 +95,7 @@ export class ClientContext {
     setIdentity(identity: ClientIdentity) {
         this.rank = identity.rank;
         if (this.channel != null) {
+            this.gw.send(this.channel, "remuser", 1, this.nick);
             this.gw.send(this.channel, "adduser", 1, this.nick, this.rank);
             this.gw.getController(this.channel)?.notifyIdentify(this);
         }

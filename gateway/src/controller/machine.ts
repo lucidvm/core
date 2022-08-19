@@ -544,7 +544,7 @@ export abstract class BaseMachine extends ChannelController {
 
                     // setup post callback
                     const token = v4();
-                    this.gw.registerPostCallback(token, data => {
+                    this.gw.uploads.registerPostCallback(token, data => {
                         const n = Date.now();
                         this.lastUpload[ctx.ip] = n;
                         this.pushFile(name, data, run);
