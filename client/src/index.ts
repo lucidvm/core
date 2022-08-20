@@ -4,7 +4,11 @@ import { Buffer } from "buffer";
 import { WebSocket } from "ws";
 
 import { Codebooks } from "@lucidvm/shared";
-import { ensureBoolean, ensureBuffer, ensureNumber, ensureString, EventConduit, GuacConduit, JSONConduit, LECConduit, wirebool, wirenum, wireprim, wirestr } from "@lucidvm/conduit";
+import {
+    ensureBoolean, ensureBuffer, ensureNumber, ensureString,
+    EventConduit, GuacConduit, JSONConduit, LECConduit,
+    wirebool, wirenum, wireprim, wirestr
+} from "@lucidvm/conduit";
 
 export interface InstanceInfo {
     software: string;
@@ -62,7 +66,7 @@ export class CVMPClient extends EventEmitter {
             maxPost: wirenum, maxFilename: wirenum) {
             switch (ensureNumber(state)) {
                 case 0:
-                    ctx.emit("fail");
+                    ctx.emit("reject:join");
                     break;
                 case 1:
                     turns = ensureBoolean(turns);
@@ -198,61 +202,44 @@ export class CVMPClient extends EventEmitter {
         });
     }
 
-    connect() {
-        var toh: any;
-
+    // connect to the event gateway
+    // automatically attempts an extend handshake
+    open() {
         this.conduit = new GuacConduit();
         this.ws = new WebSocket(this.address);
 
         // do handshake stuff on open
-        this.ws.on("open", () => {
-            // listener functions
-            var a, b, c;
+        this.ws.on("open", async () => {
+            // perform extend handshake
+            try {
+                // wait for server to send extend info
+                const level = await this.waitFor<number>("extend");
+                // if the server doesnt support lucid-1, continue
+                if (level >= 1)  {
+                    // request a conduit upgrade to lec
+                    this.send("upgrade", "lec");
+                    // wait for server to confirm
+                    const mode = await this.waitFor<string>("upgrade");
 
-            // wait for extend opcode
-            this.once("extend", a = (lvl: number) => {
-                // we got extend, cancel timeout and follow handshake
-                clearTimeout(toh);
-                // request to upgrade to lec
-                this.send("upgrade", "lec");
-            });
-            // wait for upgrade to lec
-            this.once("upgrade", b = (mode: string) => {
-                // only lec is relevant here
-                if (mode === "lec") {
-                    // request the server's codebook
-                    this.send("codebook");
+                    // if we are indeed using lec, request the codebook
+                    if (mode === "lec") {
+                        this.send("codebook");
+                        await this.waitFor("codebook");
+                    }
                 }
-                else {
-                    // clear listener for codebook
-                    this.off("codebook", c);
-                    this.emit("ready");
-                }
-            });
-            // wait for codebook
-            this.once("codebook", c = () => {
-                // should be ready now!
-                this.emit("ready");
-            });
-
-            // extend timeout
-            // if we dont receive and extend opcode before this elapses,
-            // we assume this is a legacy/non-lucid server
-            toh = setTimeout(() => {
-                // clear listeners
-                this.off("extend", a);
-                this.off("upgrade", b);
-                this.off("codebook", c);
-
-                // level 0
+            }
+            catch (ex) {
                 this.level = 0;
-                
-                // ready!
-                this.emit("ready");
-            }, 250);
+                console.warn("extend handshake failed, assuming legacy server");
+                console.warn(ex);
+            }
 
-            // emit open event, even though it's kind of useless
-            this.emit("open");
+            // inform consumer that we're ready
+            this.emit("ready");
+        });
+
+        this.ws.on("close", () => {
+            this.emit("close");
         });
 
         // handle incoming event
@@ -277,57 +264,80 @@ export class CVMPClient extends EventEmitter {
         });
     }
 
+    // disconnect from the event gateway
+    close() {
+        this.send("disconnect");
+        this.ws.close();
+    }
+
+    // send a raw instruction
     send(...args: wireprim[]) {
         this.ws.send(this.conduit.pack(...args));
     }
 
-    retrieveInstanceInfo(): Promise<InstanceInfo> {
-        return new Promise(resolve => {
-            if (this.level < 1) {
-                resolve({
-                    software: "CollabVM",
-                    version: "1.x",
-                    name: "Legacy Instance",
-                    sysop: "unknown",
-                    contact: "unknown"
-                });
-                return;
+    // wait for a particular instruction to arrive
+    waitFor<T>(event: string, timeout = 500): Promise<T> {
+        return new Promise<T>((resolve, _reject) => {
+            const reject = () => _reject("the server rejected the request!");
+            const revent = "reject:" + event;
+            var timer: any;
+            const handler = (...x: any[]) => {
+                clearTimeout(timer);
+                this.off(revent, reject);
+                if (x.length === 0) resolve(null);
+                resolve(x.length > 1 ? x : x[0]);
             }
-            this.once("instance", resolve);
-            this.send("instance");
+            this.once(event, handler);
+            this.once(revent, reject);
+            timer = setTimeout(() => {
+                this.off(event, handler);
+                this.off(revent, reject);
+                _reject(new Error("operation timed out!"));
+            }, timeout);
         });
     }
 
+    // retrieve instance info (requires lucid-1 or higher)
+    async retrieveInstanceInfo(): Promise<InstanceInfo> {
+        if (this.level < 1) {
+            return {
+                software: "CollabVM",
+                version: "1.x",
+                name: "Legacy Instance",
+                sysop: "unknown",
+                contact: "unknown"
+            };
+        }
+        this.send("instance");
+        return this.waitFor<InstanceInfo>("instance");
+    }
+
+    // retrieve the room list
     retrieveList(): Promise<ListEntry[]> {
-        return new Promise(resolve => {
-            this.once("list", resolve);
-            this.send("list");
-        });
+        this.send("list")
+        return this.waitFor<ListEntry[]>("list");
     }
 
-    setNick(nick: string): Promise<boolean> {
-        return new Promise(resolve => {
-            this.once("nickset", (status, nick) => {
-                resolve(this.nick === nick && status < 1);
-            });
-            this.send("rename", nick);
-        });
+    // set the current user's nickname
+    async setNick(nick: string): Promise<boolean> {
+        this.send("rename", nick);
+        const [status] = await this.waitFor<[number, string]>("nickset");
+        return (this.nick === nick && status < 1);
     }
 
+    // join a room
     join(room: string): Promise<RoomInfo> {
-        return new Promise(resolve => {
-            this.once("join", resolve);
-            this.send("connect", room);
-        });
+        this.send("connect", room);
+        return this.waitFor<RoomInfo>("join");
     }
 
-    part(): Promise<void> {
-        return new Promise(resolve => {
-            this.once("part", resolve);
-            this.send("disconnect");
-        });
+    // leave a room
+    async part(): Promise<void> {
+        this.send("disconnect");
+        await this.waitFor<void>("part");
     }
 
+    // say something in the chat
     say(text: string) {
         this.send("chat", text);
     }

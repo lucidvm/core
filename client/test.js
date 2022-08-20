@@ -16,8 +16,10 @@ client.on("ready", async () => {
 
     await client.part();
     console.log("left room");
+
+    client.close();
 });
 client.on("chat", msgs => {
     console.log("[chat]", msgs);
 });
-client.connect();
+client.open();
