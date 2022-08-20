@@ -19,9 +19,7 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 ### Libraries
 
-- **conduit**: Abstractions for serializing event data. Used by LucidVM to transparently utilize many different layer 6 protocols (JSON, Guacamole, MsgPack/LEC, etc) over WebSocket (and offer on-the-fly "upgrading" between them).
-
-- **shared**: Code shared between other components of the project (such as LEC event codebooks).
+- **shared**: Code shared between other components of the project (such as event conduit abstractions and LEC event codebooks).
 
 - **client**: A CVMP client library geared towards LucidVM.
 

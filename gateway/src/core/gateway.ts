@@ -2,7 +2,7 @@ import express from "express";
 import exprws, { Application, Instance } from "express-ws";
 import bodyparser from "body-parser";
 
-import type { wireprim } from "@lucidvm/conduit";
+import type { wireprim } from "@lucidvm/shared";
 
 import type { ChannelController } from "../controller";
 import { AuthDriver, XBTCodec } from "../auth";

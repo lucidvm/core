@@ -1,11 +1,11 @@
 import { Canvas, CanvasRenderingContext2D, loadImage } from "canvas";
 
-import { Codebooks } from "@lucidvm/shared";
 import {
+    Codebooks,
     ensureBoolean, ensureBuffer, ensureNumber, ensureString,
     LECClient,
     wireprim
-} from "@lucidvm/conduit";
+} from "@lucidvm/shared";
 
 import { ProtocolAdapter } from "./base";
 

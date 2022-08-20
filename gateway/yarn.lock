@@ -11,10 +11,6 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@lucidvm/conduit@link:../conduit":
-  version "0.0.0"
-  uid ""
-
 "@lucidvm/shared@link:../shared":
   version "0.0.0"
   uid ""

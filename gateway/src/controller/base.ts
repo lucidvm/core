@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-import type { wireprim } from "@lucidvm/conduit";
+import type { wireprim } from "@lucidvm/shared";
 
 import type { ClientContext, EventGateway } from "../core";
 

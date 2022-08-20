@@ -3,8 +3,7 @@ import { URL } from "url";
 import { Canvas, CanvasRenderingContext2D } from "canvas";
 import jpg from "@julusian/jpeg-turbo";
 
-import { Codebooks } from "@lucidvm/shared";
-import { ensureBoolean, ensureNumber, ensureString, wireprim, LECClient } from "@lucidvm/conduit";
+import { ensureString } from "@lucidvm/shared";
 
 import type { EventGateway } from "../core";
 

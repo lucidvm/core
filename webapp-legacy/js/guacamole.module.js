@@ -1,5 +1,4 @@
-import { Codebooks } from "@lucidvm/shared";
-import { LECConduit, GuacConduit, bonk } from "@lucidvm/conduit";
+import { Codebooks, LECConduit, GuacConduit, bonk } from "@lucidvm/shared";
 
 export function GetGuacamole() {
 /*

@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@julusian/jpeg-turbo": "^2.0.0",
-    "@lucidvm/conduit": "link:../conduit",
     "@lucidvm/shared": "link:../shared",
     "ascii85": "^1.0.2",
     "bcrypt": "^5.0.1",

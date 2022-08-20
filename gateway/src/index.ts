@@ -1,4 +1,4 @@
-import { ensureBoolean, ensureNumber } from "@lucidvm/conduit";
+import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
 
 import { DatabaseDriver, ConfigKey } from "./db";
 import { User } from "./db/entities";

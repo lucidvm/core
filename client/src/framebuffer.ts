@@ -91,7 +91,7 @@ export class CVMPFramebuffer extends EventEmitter {
         this.rectq = [];
 
         // copy display buffer to final buffer
-        //this.compCtx.globalCompositeOperation = "copy";
+        this.compCtx.globalCompositeOperation = "copy";
         this.compCtx.drawImage(this.display, 0, 0);
 
         // compose overlay layer atop at specified position

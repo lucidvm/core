@@ -3,12 +3,12 @@ import { Buffer } from "buffer";
 
 import { WebSocket } from "ws";
 
-import { Codebooks } from "@lucidvm/shared";
 import {
+    Codebooks,
     ensureBoolean, ensureBuffer, ensureNumber, ensureString,
     EventConduit, GuacConduit, JSONConduit, LECConduit,
     wireblob, wirebool, wirenum, wireprim, wirestr
-} from "@lucidvm/conduit";
+} from "@lucidvm/shared";
 
 export interface InstanceInfo {
     software: string;

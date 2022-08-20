@@ -2,7 +2,7 @@ import { Canvas, Image, ImageData } from "canvas";
 import he from "he";
 import { v4 } from "uuid";
 
-import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/conduit";
+import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/shared";
 
 import { UserRank } from "../auth";
 import type { ClientContext, EventGateway } from "../core";

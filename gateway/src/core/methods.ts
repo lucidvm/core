@@ -1,12 +1,11 @@
 import he from "he";
 
-import { Codebooks } from "@lucidvm/shared";
-
 import {
+    Codebooks,
     EventConduit, GuacConduit, JSONConduit, LECConduit,
     wireprim, wirestr, wirenum, wirebool,
     ensureString, ensureNumber, 
-} from "@lucidvm/conduit";
+} from "@lucidvm/shared";
 
 import type { ClientContext } from "./client";
 import { lex, commands } from "./commands";

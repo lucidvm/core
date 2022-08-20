@@ -105,10 +105,6 @@
   resolved "https://registry.yarnpkg.com/@lmdb/lmdb-win32-x64/-/lmdb-win32-x64-2.5.2.tgz#28f643fbc0bec30b07fbe95b137879b6b4d1c9c5"
   integrity sha512-zrBczSbXKxEyK2ijtbRdICDygRqWSRPpZMN5dD1T8VMEW5RIhIbwFWw2phDRXuBQdVDpSjalCIUMWMV2h3JaZA==
 
-"@lucidvm/conduit@link:../conduit":
-  version "0.0.0"
-  uid ""
-
 "@lucidvm/shared@link:../shared":
   version "0.0.0"
   uid ""

@@ -1,4 +1,4 @@
-import { serialize, deserialize } from "@lucidvm/shared";
+import { serialize, deserialize } from "../../msgpack";
 
 import type { wireprim } from "../types";
 import type { EventConduit } from "../base";

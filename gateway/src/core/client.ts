@@ -2,7 +2,11 @@ import { WebSocket } from "ws";
 import { Request } from "express";
 import he from "he";
 
-import { wireblob, wireprim, wirestr, ensureString, EventConduit, GuacConduit } from "@lucidvm/conduit";
+import {
+    wireblob, wireprim, wirestr,
+    ensureString,
+    EventConduit, GuacConduit
+} from "@lucidvm/shared";
 
 import { UserRank, ClientIdentity } from "../auth";
 

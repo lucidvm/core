@@ -4,7 +4,7 @@ import path from "path";
 import { DataSource, Repository } from "typeorm";
 import { hash, compare } from "bcrypt";
 
-import { wireprim, ensureString } from "@lucidvm/conduit";
+import { wireprim, ensureString } from "@lucidvm/shared";
 
 import { AuthDriver, ClientIdentity, UserRank } from "../auth";
 
