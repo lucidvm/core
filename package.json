@@ -1,16 +1,9 @@
 {
-    "name": "@lucidvm/root",
-    "version": "1.0.0",
-    "description": "LucidVM Monorepo",
-    "author": "dither",
-    "license": "BSD-3-Clause",
     "private": true,
     "scripts": {
-        "build-shared": "cd shared && yarn -D && yarn build && cd ..",
-        "build-gateway": "cd flashback && yarn -D && yarn build && cd ../gateway && yarn -D && yarn build && cd ..",
-        "build-client": "cd client && yarn -D && yarn build && cd ..",
-        "build-all": "yarn build-shared && yarn build-gateway",
+        "build-gateway": "cd flashback && yarn -D && yarn build && cd ../aeon && yarn -D && yarn build && cd ..",
+        "build-all": "yarn build-gateway",
 
-        "run-gateway": "node gateway/dist/index.js"
+        "run-gateway": "node aeon/dist/index.js"
     }
 }

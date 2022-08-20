@@ -2,7 +2,7 @@
 
 LucidVM internally uses the term "event conduit" to refer to (de)serialization adapters for tunnel events ("instructions" in Guacamole parlance). An event conduit's job is to encode an event type (or "opcode") and an array of arguments in a form that can be sent over the WebSocket connection between the client and server.
 
-The `@lucidvm/conduit` library currently supports JSON, [MsgPack](https://msgpack.org/) (with optional opcode abbreviation), and the custom codec used by [Guacamole](https://guacamole.apache.org/) (by extension, CollabVM).
+LucidVM currently supports JSON, [MsgPack](https://msgpack.org/) (with optional opcode abbreviation), and the custom codec used by [Guacamole](https://guacamole.apache.org/) (by extension, CollabVM).
 
 
 ## Guacamole

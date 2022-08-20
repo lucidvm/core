@@ -1,9 +1,7 @@
 ### special stuff
-gateway.db
-gateway.db-shm
-gateway.db-wal
-vixen.xml
-fb.png
+aeon.db
+aeon.db-shm
+aeon.db-wal
 
 
 ### node stuff

@@ -39,7 +39,7 @@ export class DatabaseDriver implements AuthDriver {
     constructor() {
         this.db = new DataSource({
             type: "better-sqlite3",
-            database: path.resolve(__dirname, "../..", "gateway.db"),
+            database: path.resolve(__dirname, "../..", "aeon.db"),
             entities: [
                 ConfigOption,
                 Machine,

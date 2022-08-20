@@ -11,9 +11,13 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@lucidvm/shared@link:../shared":
-  version "0.0.0"
-  uid ""
+"@lucidvm/shared@https://github.com/lucidvm/shared.git":
+  version "0.1.1"
+  resolved "https://github.com/lucidvm/shared.git#8ff7a96d5a3d6a50a65e3424981de0443e843c47"
+  dependencies:
+    buffer "^6.0.3"
+    events "^3.3.0"
+    ws "^8.8.1"
 
 "@mapbox/node-pre-gyp@^1.0.0":
   version "1.0.9"
