@@ -321,7 +321,6 @@ export abstract class BaseMachine extends ChannelController {
 
         // initiator votes yes
         this.voteYes(ctx);
-        //console.log(this.voteEnd, Date.now());
 
         this._think();
     }

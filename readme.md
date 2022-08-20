@@ -15,8 +15,6 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 - **gateway**: The actual server, written in TypeScript. Handles communication with clients, the "game logic" of CollabVM, event routing, transcoding VNC to Guac, etc. Requires a monitor to do anything useful.
 
-- **webapp-legacy**: A fork of the archaic collab-vm-web-app with hacked-in support for LucidVM extensions. For the time being (since we're already building atop the CollabVM 1.2 protocol anyway), this is the "reference client".
-
 ### Libraries
 
 - **shared**: Code shared between other components of the project (such as event conduit abstractions and LEC event codebooks).
