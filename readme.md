@@ -26,7 +26,3 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 - **[shared](https://github.com/lucidvm/shared)**: Code shared between other components of the project (such as event conduit abstractions and LEC codebooks).
 
 - **[client](https://github.com/lucidvm/client)**: CollabVM client library geared towards LucidVM.
-
-### Other
-
-- **docs**: Protocol documentation of LucidVM, CollabVM, and the subset of the Guacamole relevant to implementing monitors, clients, and servers compatible with LucidVM (and, if you are so inclined, vanilla CollabVM 1.2).
