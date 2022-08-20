@@ -16,6 +16,8 @@
   "dependencies": {
     "@lucidvm/conduit": "link:../conduit",
     "@lucidvm/shared": "link:../shared",
+    "buffer": "^6.0.3",
+    "canvas": "^2.9.3",
     "events": "^3.3.0",
     "ws": "^8.8.1"
   }
