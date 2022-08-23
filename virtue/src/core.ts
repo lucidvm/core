@@ -114,12 +114,6 @@ export class QEMUMonitor extends EventEmitter {
         this.vncport = vncport;
         this.snapshotname = options.snapshot;
 
-        // set vnc password
-        this.on("connected", () => {
-            this.hmp("change vnc password");
-            this.hmp(options.vncpw);
-        });
-
         // create an event listener to kick the vm if it gets shut down
         this.on("qmp_shutdown", () => {
             this.hmp("system_reset");
