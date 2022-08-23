@@ -53,7 +53,7 @@ export class QEMUMonitor extends EventEmitter {
         }
 
         // get the binary name
-        const arch = options.arch ?? "i386";
+        const arch = options.arch ?? "x86_64";
         const bin = "qemu-system-" + arch;
 
         // calculate port numbers
@@ -129,6 +129,7 @@ export class QEMUMonitor extends EventEmitter {
         console.debug(`starting qemu -> ${this.qemubin} ${this.qemuarg.join(" ")}`);
 
         this.process = spawn(this.qemubin, this.qemuarg);
+        this.process.stderr.pipe(process.stderr);
         this.process.on("exit", () => {
             if (!this.stopping) {
                 console.warn("qemu exited, restarting!");
