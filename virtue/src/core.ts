@@ -83,7 +83,7 @@ export class QEMUMonitor extends EventEmitter {
             //"-vnc", `${options.vncbind ?? "127.0.0.1"}:${index},password-secret=vncpw`,
             "-vnc", `${options.vncbind ?? "127.0.0.1"}:${index}`,
             // qmp control socket
-            "-qmp", `tcp:127.0.0.1:${qmpport},server=on,nodelay=on`,
+            "-qmp", `tcp:127.0.0.1:${qmpport},server,nodelay`,
             // guest-side agent socket
             "-chardev", `socket,id=agent,host=127.0.0.1,port=${5800 + index},server,nodelay,nowait`,
             "-device", "virtio-serial", "-device", "virtserialport,chardev=agent"
