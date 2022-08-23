@@ -1,11 +1,15 @@
+import path from "path";
+
 import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
+import type { QEMUOptions } from "@lucidvm/virtue";
 
 import { DatabaseDriver, ConfigKey } from "./db";
 import { User } from "./db/entities";
 import { EventGateway } from "./core";
 import { SimplePasswordDriver, UserRank } from "./auth";
-import { RemoteMachine } from "./controller";
+import { BaseMachine, RemoteMachine } from "./controller";
 import { mountWebapp } from "./routes";
+import { LocalMachine } from "./controller/local";
 
 // fire up the db
 const db = new DatabaseDriver();
@@ -39,7 +43,15 @@ db.init().then(async () => {
     const machines = await db.getAllMachines();
     for (const info of machines) {
         console.log("adding " + info.channel);
-        const machine = new RemoteMachine(gw, info.channel, info.monitorAddress);
+        var machine: BaseMachine
+        if (info.remote) {
+            machine = new RemoteMachine(gw, info.channel, info.details);
+        }
+        else {
+            const details: QEMUOptions = JSON.parse(info.details);
+            details.root = path.join(__dirname, "..", "vms", info.channel);
+            machine = new LocalMachine(gw, info.channel, info.id, details);
+        }
         machine.loadConfig(info);
         gw.registerController(machine);
     }

@@ -23,6 +23,7 @@
   "dependencies": {
     "@julusian/jpeg-turbo": "^2.0.0",
     "@lucidvm/shared": "https://github.com/lucidvm/shared.git",
+    "@lucidvm/virtue": "link:../virtue",
     "ascii85": "^1.0.2",
     "bcrypt": "^5.0.1",
     "better-sqlite3": "^7.6.2",

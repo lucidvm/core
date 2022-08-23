@@ -600,11 +600,21 @@ export abstract class BaseMachine extends ChannelController {
         }
     }
 
+    reset() {
+        this.doReset();
+    }
+
+    destroy() {
+        clearInterval(this.thinktimer);
+        this.destroyImpl();
+    }
+
     abstract getFrameBuffer(): Buffer;
     protected abstract setMouse(x: number, y: number, buttons: number): void;
     protected abstract setKey(keycode: number, on: boolean): void;
     protected doReset(): void { }
     protected pushFile(name: string, data: Buffer, autorun: boolean): void { }
     protected think(): void { }
+    protected abstract destroyImpl(): void | Promise<void>;
 
 }

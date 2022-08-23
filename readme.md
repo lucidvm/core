@@ -15,7 +15,11 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 - **aeon**: The actual server, written in TypeScript. Handles communication with clients, the "game logic" of CollabVM, event routing, transcoding VNC to Guac, etc. Requires a monitor to do anything useful.
 
+- **virtue**: Monitor implementation for QEMU/KVM.
+
 - **[vixen](https://github.com/lucidvm/vixen)**: Monitor implementation for VMware hypervisors.
+
+- **[hurl](https://github.com/lucidvm/hurl)**: Streams VM audio over WebSockets.
 
 - **[flashback](https://github.com/lucidvm/flashback)**: Fork of the archaic collab-vm-web-app with hacked-in support for LucidVM extensions. For the time being (since we're already building atop the CollabVM 1.2 protocol anyway), this is the "reference client".
 

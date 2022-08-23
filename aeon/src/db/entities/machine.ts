@@ -1,17 +1,25 @@
-import { Entity, Column, PrimaryColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
 import type { MachineConfig } from "../../controller/machine";
 
 @Entity()
 export class Machine implements MachineConfig {
 
+    // machine id
+    @PrimaryGeneratedColumn()
+    id: number;
+
     // channel to bind to
-    @PrimaryColumn()
+    @Column({ unique: true })
     channel: string;
 
-    // uri of the hypervisor monitor's websocket
+    // local or remote
+    @Column({ default: false })
+    remote: boolean;
+
+    // setup details for this machine
     @Column()
-    monitorAddress: string;
+    details: string;
 
     // display name
     @Column({ default: "Unnamed VM" })

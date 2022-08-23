@@ -10,6 +10,8 @@ import { AuthDriver, ClientIdentity, UserRank } from "../auth";
 
 import { User, Machine, ConfigOption, ConfigKey } from "./entities";
 
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 // default config values
 const defaultValues: Record<ConfigKey, () => string> = [
     () => "0.0.0.0",
@@ -17,7 +19,7 @@ const defaultValues: Record<ConfigKey, () => string> = [
 
     () => "0",
     // XXX: probably not ideal?
-    () => crypto.randomBytes(64).toString("base64url"),
+    () => [...crypto.randomBytes(64)].map(x => charset[x % charset.length]).join(""),
     () => "1",
 
     () => null,
@@ -87,6 +89,10 @@ export class DatabaseDriver implements AuthDriver {
     }
 
     // machine stuff
+
+    getMachine(channel: string): Promise<Machine> {
+        return this.machines.findOneBy({ channel });
+    }
 
     getAllMachines(): Promise<Machine[]> {
         return this.machines.find();

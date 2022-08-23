@@ -1,4 +1,8 @@
-import he from "he";
+import type { QEMUOptions } from "@lucidvm/virtue";
+
+import { UserRank } from "../auth";
+import { BaseMachine, LocalMachine } from "../controller";
+import { DatabaseDriver } from "../db";
 
 import type { ClientContext } from "./client";
 
@@ -38,12 +42,40 @@ export const commands: { [key: string]: (ctx: ClientContext, raw: string, ...arg
         ctx.send("chat", "", "Nothing happened.");
     },
 
-    echo(ctx, raw) {
-        ctx.send("chat", "", he.escape(raw));
+    reset(ctx) {
+        if (ctx.rank === UserRank.Administrator) {
+            (ctx.gw.getController(ctx.channel) as BaseMachine).reset();
+            ctx.send("chat", "", "Administrative reset issued.");
+        }
+        else ctx.send("chat", "", "No.");
     },
 
-    shrug(ctx, raw) {
-        ctx.gw.send(ctx.channel, "chat", ctx.nick, he.escape((raw.length > 0 ? raw + " " : "") + "¯\\_(ツ)_/¯"));
+    // FIXME: delete this entire command and make it suck less eventually
+    async snapshot(ctx) {
+        const gw = ctx.gw;
+        if (ctx.rank === UserRank.Administrator) {
+            try {
+                const controller = gw.getController(ctx.channel);
+                if (controller instanceof LocalMachine) {
+                    const name = "manual-" + Date.now();
+                    controller.monitor.snapshot(name);
+                    const db = gw.getAuthStrategy("local") as DatabaseDriver;
+                    const info = await db.getMachine(ctx.channel);
+                    const details: QEMUOptions = JSON.parse(info.details);
+                    details.snapshot = name;
+                    info.details = JSON.stringify(details);
+                    await db.saveMachine(info);
+                    ctx.send("chat", "", "Snapshot started.");
+                }
+                else {
+                    ctx.send("chat", "", "This machine is not in-process. Cannot add snapshot.");
+                }
+            }
+            catch (ex) {
+                ctx.send("chat", "", ex.toString());
+            }
+        }
+        else ctx.send("chat", "", "No.");
     }
 
 };

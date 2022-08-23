@@ -25,7 +25,7 @@ export class VNCAdapter extends ProtocolAdapter {
             fps: FPS,
             encodings: [
                 //VNCClient.consts.encodings.copyRect,
-                VNCClient.consts.encodings.zrle,
+                //VNCClient.consts.encodings.zrle,
                 //VNCClient.consts.encodings.hextile,
                 VNCClient.consts.encodings.raw,
 

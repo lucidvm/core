@@ -105,7 +105,7 @@ class SocketBuffer {
                 // console.log('Esperando. BytesLeft: ' + this.bytesLeft() + '  Desejados: ' + bytes);
                 await this.sleep(4);
                 if (counter === 50) {
-                    console.log('Stucked on ' + name + '  -  Buffer Size: ' + this.buffer.length + '   BytesLeft: ' + this.bytesLeft() + '   BytesNeeded: ' + bytes);
+                    //console.log('Stucked on ' + name + '  -  Buffer Size: ' + this.buffer.length + '   BytesLeft: ' + this.bytesLeft() + '   BytesNeeded: ' + bytes);
                 }
             }
             resolve();

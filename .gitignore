@@ -2,6 +2,8 @@
 aeon.db
 aeon.db-shm
 aeon.db-wal
+vms/
+virtue/src/standalone.ts
 
 
 ### node stuff

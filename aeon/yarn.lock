@@ -12,12 +12,16 @@
     pkg-prebuilds "~0.1.0"
 
 "@lucidvm/shared@https://github.com/lucidvm/shared.git":
-  version "0.1.1"
-  resolved "https://github.com/lucidvm/shared.git#8ff7a96d5a3d6a50a65e3424981de0443e843c47"
+  version "0.1.2"
+  resolved "https://github.com/lucidvm/shared.git#4904a719ebc8bc940823a612da74ccdaa234ff08"
   dependencies:
     buffer "^6.0.3"
     events "^3.3.0"
     ws "^8.8.1"
+
+"@lucidvm/virtue@link:../virtue":
+  version "0.0.0"
+  uid ""
 
 "@mapbox/node-pre-gyp@^1.0.0":
   version "1.0.9"
@@ -1320,6 +1324,13 @@ simple-get@^4.0.0:
     once "^1.3.1"
     simple-concat "^1.0.0"
 
+split@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/split/-/split-1.0.1.tgz#605bd9be303aa59fb35f9229fbea0ddec9ea07d9"
+  integrity sha512-mTyOoPbrivtXnwnIxZRFYRrPNtEFKlpB2fvjSnCQUiAA6qAZzqwna5envK4uk6OIeP17CsdF3rSBGYVBsU0Tkg==
+  dependencies:
+    through "2"
+
 statuses@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
@@ -1406,6 +1417,11 @@ thenify-all@^1.0.0:
   integrity sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==
   dependencies:
     any-promise "^1.0.0"
+
+through@2:
+  version "2.3.8"
+  resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
+  integrity sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==
 
 toidentifier@1.0.1:
   version "1.0.1"

@@ -10,7 +10,7 @@ export enum ConfigKey {
     AuthMandatory,
     // token secret? (default = generate)
     TokenSecret,
-    // allow legacy auth?
+    // allow legacy auth? (default = true)
     LegacyAuth,
 
     // === legacy auth settings ===

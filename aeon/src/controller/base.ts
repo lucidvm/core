@@ -31,4 +31,6 @@ export abstract class ChannelController extends EventEmitter {
     abstract interpret(ctx: ClientContext, opcode: string, ...args: wireprim[]): void | Promise<void>;
 
     abstract getThumbnail(): Buffer;
+
+    abstract destroy(): void | Promise<void>;
 }
