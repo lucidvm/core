@@ -85,7 +85,7 @@ export class QEMUMonitor extends EventEmitter {
             // qmp control socket
             "-qmp", `tcp:127.0.0.1:${qmpport},server=on,nodelay=on`,
             // guest-side agent socket
-            "-chardev", `socket,id=agent,host=127.0.0.1,port=${5800 + index},server=on,nodelay=on,wait=off`,
+            "-chardev", `socket,id=agent,host=127.0.0.1,port=${5800 + index},server,nodelay,nowait`,
             "-device", "virtio-serial", "-device", "virtserialport,chardev=agent"
         ];
 
