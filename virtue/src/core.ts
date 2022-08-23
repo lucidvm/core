@@ -68,9 +68,9 @@ export class QEMUMonitor extends EventEmitter {
             // hardware config
             "-m", options.ram?.toString() ?? "512",
             "-drive", `id=hda,file=${hdapath}`,
-            "-vga", options.vga ?? "cirrus",
+            "-vga", options.vga ?? "qxl",
             "-netdev", `tap,id=tap,ifname=${options.netprefix}${index},script=no,downscript=no`,
-            "-device", `${options.nic ?? "rtl8139"},netdev=tap,mac=DE:AD:BE:EF:00:${index.toString().padStart(2, "0")}`,
+            "-device", `${options.nic ?? "virtio-net"},netdev=tap,mac=DE:AD:BE:EF:00:${index.toString().padStart(2, "0")}`,
             "-boot", "cd",
             "-usb",
             "-device", "usb-tablet",
@@ -79,8 +79,9 @@ export class QEMUMonitor extends EventEmitter {
             "-no-shutdown",
 
             // vnc kvm socket
-            "-object", `secret,id=vncpw,data=${options.vncpw}`,
-            "-vnc", `${options.vncbind ?? "127.0.0.1"}:${index},password-secret=vncpw`,
+            //"-object", `secret,id=vncpw,data=${options.vncpw}`,
+            //"-vnc", `${options.vncbind ?? "127.0.0.1"}:${index},password-secret=vncpw`,
+            "-vnc", `${options.vncbind ?? "127.0.0.1"}:${index}`,
             // qmp control socket
             "-qmp", `tcp:127.0.0.1:${qmpport},server=on,nodelay=on`,
             // guest-side agent socket
@@ -112,6 +113,12 @@ export class QEMUMonitor extends EventEmitter {
         this.qmpport = qmpport;
         this.vncport = vncport;
         this.snapshotname = options.snapshot;
+
+        // set vnc password
+        this.on("connected", () => {
+            this.hmp("change vnc password");
+            this.hmp(options.vncpw);
+        });
 
         // create an event listener to kick the vm if it gets shut down
         this.on("qmp_shutdown", () => {
