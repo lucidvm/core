@@ -1,7 +1,5 @@
 ### special stuff
-aeon.db
-aeon.db-shm
-aeon.db-wal
+*.db*
 vms/
 virtue/src/standalone.ts
 

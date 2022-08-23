@@ -1,26 +1,15 @@
 import { Entity, Column, PrimaryColumn } from "typeorm";
 
 export enum ConfigKey {
-    // === gateway server settings ===
-    ListenHost,
-    ListenPort,
+    ListenHost = "gateway.listen.address",
+    ListenPort = "gateway.listen.port",
 
-    // === core auth support ===
-    // auth mandatory? (default = no)
-    AuthMandatory,
-    // token secret? (default = generate)
-    TokenSecret,
-    // allow legacy auth? (default = true)
-    LegacyAuth,
+    AuthMandatory = "gateway.auth.required",
+    TokenSecret = "gateway.auth.tokenSecret",
 
-    // === legacy auth settings ===
-    // master password? (default = unset)
-    MasterPassword,
-    // user password? (default = "hunter2")
-    UserPassword,
-
-    // number of keys in this enum, for loop usage
-    NumberOfKeys
+    LegacyAuth = "gateway.auth.legacy.enabled",
+    MasterPassword = "gateway.auth.legacy.adminPassword",
+    UserPassword = "gateway.auth.legacy.connectPassword"
 }
 
 @Entity()
