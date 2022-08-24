@@ -459,9 +459,14 @@ export abstract class BaseMachine extends ChannelController {
         }
 
         // send initial screen data
-        ctx.send("size", LAYER_FB, this.lastWidth, this.lastHeight);
-        ctx.send("png", 14, LAYER_FB, 0, 0, this.getFrameBuffer());
-        ctx.send("sync", 0);
+        try {
+            ctx.send("size", LAYER_FB, this.lastWidth, this.lastHeight);
+            ctx.send("png", 14, LAYER_FB, 0, 0, this.getFrameBuffer());
+            ctx.send("sync", 0);
+        }
+        catch (e) {
+            // adapter isnt ready
+        }
 
         //ctx.send("shade", LAYER_PSEUDOCURSOR, 0);
         if (this.cursorMetrics.active) {

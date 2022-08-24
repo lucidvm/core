@@ -99,7 +99,7 @@ export class ClientContext {
     setIdentity(identity: ClientIdentity) {
         this.rank = identity.rank;
         if (this.channel != null) {
-            this.gw.send(this.channel, "adduser", 1, this.nick, this.rank);
+            this.gw.announcePeer(this);
             this.gw.getController(this.channel)?.notifyIdentify(this);
         }
     }
@@ -121,7 +121,21 @@ export class ClientContext {
     }
 
     sendRename(newnick: string, error: number = 0) {
-        this.send("rename", false, error, newnick);
+        this.send("rename", false, error, this.sanitize(newnick));
+    }
+
+    sendPeerRename(peer: ClientContext, oldnick: string) {
+        this.send("rename", true, this.sanitize(oldnick), this.sanitize(peer.nick));
+    }
+
+    sendPeers(peers: ClientContext[], leaving = false) {
+        var data: [string, UserRank?][] = peers.map(x => leaving ? [x.nick] : [x.nick, x.rank]);
+        if (this.strip) data.map(x => x[0] = this.sanitize(x[0]));
+        this.send(leaving ? "remuser" : "adduser", peers.length, ...data.flat());
+    }
+
+    sendChat(peer: ClientContext, content: string) {
+        this.send("chat", this.sanitize(peer.nick), this.sanitize(content));
     }
 
 }

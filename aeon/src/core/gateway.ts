@@ -122,4 +122,28 @@ export class EventGateway {
             (x.nick?.toLowerCase() === nick?.toLowerCase())).length > 0;
     }
 
+    announcePeer(peer: ClientContext, leaving = false) {
+        if (peer.channel == null) return;
+        for (const client of this.getClients()) {
+            if (client.channel !== peer.channel) continue;
+            client.sendPeers([peer], leaving);
+        }
+    }
+
+    announceRename(peer: ClientContext, oldnick: string) {
+        if (peer.channel == null) return;
+        for (const client of this.getClients()) {
+            if (client === peer || client.channel !== peer.channel) continue;
+            client.sendPeerRename(peer, oldnick);
+        }
+    }
+
+    sendChat(author: ClientContext, content: string) {
+        if (author.channel == null) return;
+        for (const client of this.getClients()) {
+            if (client.channel !== author.channel) continue;
+            client.sendChat(author, content);
+        }
+    }
+
 }

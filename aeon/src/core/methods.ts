@@ -4,7 +4,7 @@ import {
     Codebooks,
     EventConduit, GuacConduit, JSONConduit, LECConduit,
     wireprim, wirestr, wirenum, wirebool,
-    ensureString, ensureNumber, 
+    ensureString, ensureNumber, ensureBoolean, 
 } from "@lucidvm/shared";
 
 import type { ClientContext } from "./client";
@@ -48,17 +48,17 @@ export const defaultMethods: {
 
         // send channel peer list
         const peers = ctx.gw.getChannelClients(channel);
-        ctx.send("adduser", peers.length, ...peers.map(x => [x.nick, x.rank]).flat());
-        ctx.gw.sendExclude(channel, ctx, "adduser", 1, ctx.nick, ctx.rank);
+        ctx.sendPeers(peers);
+        ctx.gw.announcePeer(ctx);
     },
 
     disconnect(ctx, internal: wirebool) {
         const chan = ctx.channel;
-        ctx.channel = null;
         if (chan != null) {
             ctx.gw.getController(chan)?.notifyPart(ctx);
-            ctx.gw.send(chan, "remuser", 1, ctx.nick);
+            ctx.gw.announcePeer(ctx, true);
         }
+        ctx.channel = null;
         if (!internal) {
             ctx.send("connect", 2);
         }
@@ -78,28 +78,31 @@ export const defaultMethods: {
         if (nick == null) {
             nick = ctx.guestify();
         }
-        else {
-            // sanitize that name!
-            nick = he.encode(nick);
+
+        // very lazily block things that trigger html escaping
+        if (nick !== he.escape(nick)) {
+            ctx.sendRename(ctx.nick, RENAME_INVALID);
+            return;
         }
+
+        const oldnick = ctx.nick;
 
         if (ctx.channel != null) {
             if (ctx.gw.nickInUse(ctx.channel, nick)) {
                 ctx.sendRename(ctx.nick, RENAME_INUSE);
                 return;
             }
+            ctx.nick = nick;
             ctx.sendRename(nick, RENAME_OK);
-            ctx.gw.sendExclude(ctx.channel, ctx, "rename", true, ctx.nick, nick);
-
             // workaround for vanilla 1.2 frontend bug related to losing visible rank on rename
-            ctx.send("adduser", 1, nick, ctx.rank);
+            ctx.sendPeers([ctx]);
         }
         else {
+            ctx.nick = nick;
             ctx.sendRename(nick, RENAME_OK);
         }
 
-        const oldnick = ctx.nick;
-        ctx.nick = nick;
+        ctx.gw.announceRename(ctx, oldnick);
         ctx.gw.getController(ctx.channel)?.notifyNick(ctx, oldnick);
     },
 
@@ -115,11 +118,8 @@ export const defaultMethods: {
             return;
         }
 
-        // dont forget to sanitize
-        text = he.encode(text);
-
         text = ensureString(text);
-        ctx.gw.send(ctx.channel, "chat", ctx.nick, text);
+        ctx.gw.sendChat(ctx, text);
     },
 
     async admin(ctx, command: wirenum, data: wirestr) {
@@ -165,7 +165,7 @@ export const defaultMethods: {
             case "json":
                 next = new JSONConduit();
                 break;
-            case "lec":
+            case "lec.disable":
                 next = new LECConduit(Codebooks.CVMP);
                 break;
             default:
@@ -254,9 +254,8 @@ export const defaultMethods: {
     },
 
     // enable or disable sanitizing strings serverside
-    // TODO: currently does nothing, needs quite a bit of reworking to implement
     strip(ctx, enable: boolean) {
-        ctx.strip = enable;
+        ctx.strip = ensureBoolean(enable);
         ctx.send("strip", enable);
     },
 
