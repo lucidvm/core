@@ -1,10 +1,10 @@
 # Building LucidVM
 
-## aeon+virtue
+## aeon, virtue, and flashback
 
 **Requirements**:
 - git
-- node and npm
+- node and npm (v16 preferred)
 - yarn (`sudo npm install -g yarn`)
 
 ```sh

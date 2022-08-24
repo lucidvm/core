@@ -8,7 +8,6 @@ import {
 } from "@lucidvm/shared";
 
 import type { ClientContext } from "./client";
-import { lex, commands } from "./commands";
 
 const RENAME_OK = 0;
 const RENAME_INUSE = 1;
@@ -112,15 +111,7 @@ export const defaultMethods: {
             text = text.substring(1);
         }
         else if (text.startsWith("/")) {
-            const raw = text.substring(1);
-            const args = lex(raw);
-            const cmd = args.shift();
-            if (!(cmd in commands)) {
-                ctx.send("chat", "", "Unknown command.");
-                return;
-            }
-            const adv = raw.indexOf(" ");
-            commands[cmd](ctx, adv > 0 ? raw.substring(adv) : "", ...args);
+            ctx.gw.commands.handleMessage(ctx, text);
             return;
         }
 
@@ -138,7 +129,7 @@ export const defaultMethods: {
                 const driver = ctx.gw.getAuthStrategy("legacy");
                 if (driver == null) {
                     // if simple auth is disabled, there's really not much we can do
-                    ctx.send("chat", "", "Legacy password auth is disabled on this server.");
+                    ctx.announce("Legacy password auth is disabled on this server.");
                     return;
                 }
                 const identity = await driver.identify(data);

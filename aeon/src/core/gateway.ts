@@ -7,6 +7,7 @@ import type { wireprim } from "@lucidvm/shared";
 import type { ChannelController } from "../controller";
 import { AuthDriver, XBTCodec } from "../auth";
 import { UploadManager } from "../routes";
+import { CommandHandler } from "../commands";
 
 import { ClientContext } from "./client";
 
@@ -20,6 +21,7 @@ export class EventGateway {
     private authdrivers: { [k: string]: AuthDriver } = {};
     private nextid: number = 0;
 
+    readonly commands: CommandHandler = new CommandHandler();
     readonly uploads: UploadManager;
     readonly xbt: XBTCodec<[string, string | number]>;
 

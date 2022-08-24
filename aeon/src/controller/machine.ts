@@ -110,7 +110,7 @@ export abstract class BaseMachine extends ChannelController {
             if (this.options.announceJoinPart) {
                 this.announce(`${ctx.nick} connected`);
             }
-            ctx.send("chat", "", this.options.motd);
+            ctx.announce(this.options.motd);
         });
         this.on(MachineEvents.UserPart, (ctx: ClientContext) => {
             if (this.options.announceJoinPart) {
@@ -477,7 +477,7 @@ export abstract class BaseMachine extends ChannelController {
         if (this.gw.authMandate && ctx.rank <= UserRank.Anonymous) {
             setTimeout(() => {
                 if (ctx.rank <= UserRank.Anonymous) {
-                    ctx.send("chat", "", "Authentication is mandatory on this server. Please log in.");    
+                    ctx.announce("Authentication is mandatory on this server. Please log in.");    
                 }
             }, 250);
         }

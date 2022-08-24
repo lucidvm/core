@@ -108,6 +108,10 @@ export class ClientContext {
         this.ws.send(this.conduit.pack(...args));
     }
 
+    announce(text: string) {
+        this.send("chat", "", text);
+    }
+
     sendPing() {
         this.send("nop");
     }

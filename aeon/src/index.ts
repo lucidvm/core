@@ -3,12 +3,13 @@ import path from "path";
 import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
 import type { QEMUOptions } from "@lucidvm/virtue";
 
-import { initDatabase, ConfigKey, User } from "./db";
+import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
 import { DatabaseDriver, SimplePasswordDriver, UserRank } from "./auth";
 import { BaseMachine, RemoteMachine, LocalMachine } from "./controller";
 import { mountWebapp } from "./routes";
+import { registerAdminCommands } from "./commands";
 
 console.log("starting event gateway...!");
 
@@ -43,6 +44,17 @@ initDatabase().then(async db => {
             await config.getOption(ConfigKey.UserPassword)
         ));
     }
+
+    // register chat commands
+    gw.commands.register({
+        name: "xyzzy",
+        description: "Say the magic word",
+        unlisted: true,
+        method(ctx) {
+            ctx.author.announce("Nothing happened...");
+        }
+    });
+    registerAdminCommands(gw.commands, mchmgr);
 
     // register machines
     const machines = await mchmgr.getAllMachines();
