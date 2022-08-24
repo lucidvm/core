@@ -158,16 +158,15 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     canTakeTurn(ctx: ClientContext) {
-        // TODO: admin override
-        return this.options.canTurn;
+        return hasFlag(ctx.mask, Flag.TurnOverride) || this.options.canTurn;
     }
     canPlaceVote(ctx: ClientContext) {
-        // TODO: admin override
+        // it doesnt make much sense to have a "vote override" permission
         return this.options.canVote;
     }
     canUploadFile(ctx: ClientContext) {
-        // TODO: implement uploads
-        return this.options.canUpload;
+        // TODO: factor in whether the backend actually supports uploads
+        return hasFlag(ctx.mask, Flag.UploadOverride) || this.options.canUpload;
     }
 
     // periodic routine
@@ -389,52 +388,16 @@ export abstract class BaseMachine extends ChannelController {
     protected sync() {
         this.broadcast("sync", 0);
     }
-    
-    // most of these setX and clearX methods are vestige from early development
 
-    setName(name: string) {
-        this.options.displayName = name;
-    }
-
-    setMOTD(motd: string) {
-        this.options.motd = motd;
-    }
-
-    clearMOTD() {
-        this.options.motd = null;
-    }
-
-    setFlags(turns: boolean, votes: boolean, upload: boolean) {
-        this.options.canTurn = turns;
-        this.options.canVote = votes;
-        this.options.canUpload = upload;
+    // load machine config
+    loadConfig(data: MachineConfig) {
+        this.options = data;
         this.broadcastSpecial(ctx => [
             "action",
             this.canTakeTurn(ctx),
             this.canPlaceVote(ctx),
             this.canUploadFile(ctx)
         ]);
-    }
-
-    setTerms(turnsec: number, votesec: number, votecool: number, uploadcool: number) {
-        this.options.turnDuration = turnsec;
-        this.options.voteDuration = votesec;
-        this.options.voteCooldown = votecool;
-        this.options.uploadCooldown = uploadcool;
-    }
-
-    setAnnounce(join: boolean, nick: boolean, vote: boolean, voter: boolean, upload: boolean) {
-        this.options.announceJoinPart = join;
-        this.options.announceNick = nick;
-        this.options.announceVote = vote;
-        this.options.announceVoters = voter;
-        this.options.announceUpload = upload;
-    }
-
-    // load machine config
-    loadConfig(data: MachineConfig) {
-        // TODO: broadcast action opcode on config update
-        this.options = data;
     }
 
     // handle room join
@@ -513,7 +476,10 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     notifyIdentify(ctx: ClientContext): void {
-        
+        ctx.send("action",
+            this.canTakeTurn(ctx),
+            this.canPlaceVote(ctx),
+            this.canUploadFile(ctx));
     }
 
     // interpret guac/collabvm-specific opcode

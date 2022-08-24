@@ -57,6 +57,7 @@ export class LocalMachine extends BaseMachine {
     }
 
     protected override destroyImpl(): void | Promise<void> {
+        this.vnc.disconnect();
         this.monitor.stop();
     }
 

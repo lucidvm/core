@@ -22,18 +22,27 @@ export enum Flag {
     // appears as an administrator in the frontend
     VisibleAdmin    = 1 << 5,
 
-    // allows the user to force-reset the machine
-    Reset           = 1 << 6,
+    // can always take a turn
+    TurnOverride    = 1 << 6,
+    // can always upload a file
+    UploadOverride  = 1 << 8,
+
+    // allows the user to force-reset a machine
+    Reset           = 1 << 12,
     // allows the user to manage snapshots
-    Snapshot        = 1 << 7,
+    Snapshot        = 1 << 13,
 
     // allows access to the admin api
-    API             = 1 << 22,
+    API             = 1 << 24,
+    // allows modifying global config values
+    Config          = 1 << 25,
+    // allows managing machines
+    ManageVMs       = 1 << 26,
 
     // instance root
-    God             = 1 << 23,
+    Wheel           = 1 << 30,
     // all permissions
-    All             = ~(~0 << 24)
+    All             = ~(~0 << 31)
 }
 
 export interface ClientIdentity {
@@ -52,7 +61,7 @@ export interface AuthDriver {
 }
 
 export function hasFlag(flags: number, flag: Flag): boolean {
-    if ((flags & Flag.God) === Flag.God) return true;
+    if ((flags & Flag.Wheel) === Flag.Wheel) return true;
     return (flags & flag) === flag;
 }
 

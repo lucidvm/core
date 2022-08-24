@@ -8,12 +8,16 @@ import { wireprim, bonk } from "@lucidvm/shared";
 import { ConfigOption, ConfigKey } from "../db/entities";
 
 interface OptionMetadata {
+    // human-friendly category
+    category?: string;
     // human-friendly name for the config item
     name?: string;
     // human-friendly description
     description?: string;
     // should this value be retrievable from the admin api?
     secret?: boolean;
+    // should this value be hidden on a graphical frontend?
+    hidden?: boolean;
     // the type of this value
     type?: "string" | "number" | "boolean"
     // the default value to use when not defined in the db
@@ -23,22 +27,31 @@ interface OptionMetadata {
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const options: Record<ConfigKey, OptionMetadata> = {
     [ConfigKey.ListenHost]: {
+        category: "Listen",
         name: "Address",
-        default: "0.0.0.0"
+        description: "Address to listen on",
+        default: "127.0.0.1"
     },
     [ConfigKey.ListenPort]: {
+        category: "Listen",
         name: "Port",
+        description: "Port to listen on",
         type: "number",
         default: 9738
     },
     [ConfigKey.AuthMandatory]: {
+        category: "Auth",
         name: "Require authentication?",
+        description: "Enable this option to force users to authenticate before participating",
         type: "boolean",
         default: false
     },
     [ConfigKey.TokenSecret]: {
         name: "Token secret",
+        //description: "Recompute Base Encryption Key Hash",
+        description: "Secret value used to sign tokens; you probably don't want to touch this unless the value has somehow leaked to an untrusted party",
         secret: true,
+        hidden: true,
         get default() { return [...crypto.randomBytes(64)].map(x => charset[x % charset.length]).join(""); }
     },
     // XXX: UserPassword is not considered a secret, nor hashed
@@ -47,9 +60,11 @@ const options: Record<ConfigKey, OptionMetadata> = {
     //      maybe it should be, but i consider it no more important than
     //      hashing the connect password for a game server...
     //
-    //      user-specific passwords *are* hashed
+    //      obviously, user-specific passwords *are* hashed
     [ConfigKey.UserPassword]: {
+        category: "Auth",
         name: "User password",
+        description: "Password for simple password-only authentication; blank to disable password-only auth",
         default: "hunter2"
     }
 };
@@ -70,6 +85,7 @@ export class ConfigManager extends EventEmitter {
         name?: string;
         description?: string;
         secret?: boolean;
+        hidden?: boolean;
         type?: "string" | "number" | "boolean"
     }[] {
         return Object.entries(options).map(x => ({

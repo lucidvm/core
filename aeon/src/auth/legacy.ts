@@ -28,7 +28,7 @@ export class SimplePasswordDriver implements AuthDriver {
     }
 
     identify(secret: string): ClientIdentity {
-        if (this.password != null && secret === this.password) {
+        if (this.password != null && this.password != "" && secret === this.password) {
             return user;
         }
         return null;

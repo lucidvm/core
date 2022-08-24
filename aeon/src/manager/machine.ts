@@ -91,6 +91,7 @@ export class MachineManager extends EventEmitter {
             const ov = config[key];
             (info[key] as any) = typeof ov === "undefined" ? og : ov;
         }
+        await this.repo.save(info);
         const machine = this.gw.getController(channel);
         if (machine instanceof BaseMachine) {
             machine.loadConfig(info);
@@ -101,6 +102,7 @@ export class MachineManager extends EventEmitter {
         const machine = this.gw.getController(channel);
         if (machine instanceof BaseMachine) {
             machine.destroy();
+            this.gw.unregisterController(channel);
         }
         await this.repo.delete({ channel });
     }
