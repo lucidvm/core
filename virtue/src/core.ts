@@ -49,7 +49,7 @@ export class QEMUMonitor extends EventEmitter {
             throw new Error("index must be specified");
         }
         if (options.root == null || options.tap == null || options.vncpw == null) {
-            throw new Error("root, netprefix, vncpw must be specified");
+            throw new Error("root, tap, vncpw must be specified");
         }
 
         // get the binary name

@@ -30,7 +30,7 @@ export class VNCAdapter extends ProtocolAdapter {
                 VNCClient.consts.encodings.raw,
 
                 VNCClient.consts.encodings.pseudoDesktopSize,
-                VNCClient.consts.encodings.pseudoCursor
+                //VNCClient.consts.encodings.pseudoCursor
             ]
         });
 
