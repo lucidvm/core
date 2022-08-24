@@ -6,7 +6,7 @@ import type { QEMUOptions } from "@lucidvm/virtue";
 import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
-import { DatabaseDriver, SimplePasswordDriver, Flag } from "./auth";
+import { LocalDriver, SimplePasswordDriver, Flag } from "./auth";
 import { BaseMachine, RemoteMachine, LocalMachine } from "./controller";
 import { mountWebapp, mountAdminAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
@@ -17,14 +17,13 @@ console.log("starting event gateway...!");
 initDatabase().then(async db => {
     // create managers
     const config = new ConfigManager(db);
-    const mchmgr = new MachineManager(db);
-    const users = new DatabaseDriver(db);
+    const users = new LocalDriver(db);
 
     // create root user if it doesnt exist
     if (await users.users.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
         await users.register("root", "nebur123");
-        await users.setMask("root", Flag.All);
+        await users.setUserMask("root", Flag.All);
     }
 
     // instantiate the gateway and register the db as an auth driver
@@ -32,18 +31,20 @@ initDatabase().then(async db => {
         await config.getOption(ConfigKey.TokenSecret),
         ensureBoolean(await config.getOption(ConfigKey.AuthMandatory))
     );
+    config.on(ConfigKey.AuthMandatory, on => gw.authMandate = ensureBoolean(on));
     await gw.auth.registerDriver(users);
+
+    // instantiate machine manager
+    const mchmgr = new MachineManager(gw, db, path.join(__dirname, "..", "vms"));
 
     // mount additional routes
     mountWebapp(gw);
     mountAdminAPI(gw, config, mchmgr);
 
-    // register legacy driver if needed
-    if (await config.getOption(ConfigKey.LegacyAuth)) {
-        await gw.auth.registerDriver(new SimplePasswordDriver(
-            await config.getOption(ConfigKey.UserPassword)
-        ));
-    }
+    // register legacy driver
+    const pwdrv = new SimplePasswordDriver(await config.getOption(ConfigKey.UserPassword));
+    config.on(ConfigKey.UserPassword, pw => pwdrv.password = pw);
+    await gw.auth.registerDriver(pwdrv);
 
     // register chat commands
     gw.commands.register({
@@ -56,22 +57,8 @@ initDatabase().then(async db => {
     });
     registerAdminCommands(gw.commands, mchmgr);
 
-    // register machines
-    const machines = await mchmgr.getAllMachines();
-    for (const info of machines) {
-        console.log("adding " + info.channel);
-        var machine: BaseMachine
-        if (info.remote) {
-            machine = new RemoteMachine(gw, info.channel, info.details);
-        }
-        else {
-            const details: QEMUOptions = JSON.parse(info.details);
-            details.root = path.join(__dirname, "..", "vms", info.channel);
-            machine = new LocalMachine(gw, info.channel, info.id, details);
-        }
-        machine.loadConfig(info);
-        gw.registerController(machine);
-    }
+    // start all machines
+    mchmgr.startAll();
     
     // start listening
     const host = await config.getOption(ConfigKey.ListenHost);

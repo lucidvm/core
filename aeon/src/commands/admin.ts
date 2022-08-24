@@ -14,11 +14,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
             if (ctx.room instanceof LocalMachine) {
                 const name = "manual-" + Date.now();
                 ctx.room.monitor.snapshot(name);
-                const info = await machines.getMachine(ctx.room.channel);
-                const details: QEMUOptions = JSON.parse(info.details);
-                details.snapshot = name;
-                info.details = JSON.stringify(details);
-                await machines.saveMachine(info);
+                await machines.setSnapshot(ctx.room.channel, name);
                 ctx.author.announce("Snapshot started.");
             }
             else {

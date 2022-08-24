@@ -433,6 +433,7 @@ export abstract class BaseMachine extends ChannelController {
 
     // load machine config
     loadConfig(data: MachineConfig) {
+        // TODO: broadcast action opcode on config update
         this.options = data;
     }
 

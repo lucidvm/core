@@ -13,11 +13,7 @@ export class SimplePasswordDriver implements AuthDriver {
 
     readonly id = "legacy";
 
-    private passUser: string;
-
-    constructor(userpass: string = null) {
-        this.passUser = userpass;
-    }
+    constructor(public password: string = null) { }
 
     init() { }
 
@@ -32,7 +28,7 @@ export class SimplePasswordDriver implements AuthDriver {
     }
 
     identify(secret: string): ClientIdentity {
-        if (this.passUser != null && secret === this.passUser) {
+        if (this.password != null && secret === this.password) {
             return user;
         }
         return null;

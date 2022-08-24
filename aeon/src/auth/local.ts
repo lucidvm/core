@@ -1,12 +1,11 @@
 import { DataSource, Repository } from "typeorm";
 import { hash, compare } from "bcrypt";
 
-import { Flag } from "../auth";
 import { User, Group } from "../db";
 
 import { AuthDriver, ClientIdentity } from "./base";
 
-export class DatabaseDriver implements AuthDriver {
+export class LocalDriver implements AuthDriver {
 
     readonly id = "local";
 
@@ -52,19 +51,11 @@ export class DatabaseDriver implements AuthDriver {
         };
     }
 
-    async getFencepost(id: number) {
-        const user = await this.users.findOneBy({ id });
-        if (user == null) return null;
-        return user.fencepost;
-    }
-
     async register(username: string, password: string): Promise<ClientIdentity> {
         // create default group if it doesnt exist
         var group = await this.groups.findOneBy({ name: "default" });
         if (group == null) {
-            group = new Group();
-            group.name = "default";
-            group = await this.groups.save(group);
+            group = await this.createGroup("default");
         }
         // now actually create the user
         var user = new User();
@@ -91,10 +82,31 @@ export class DatabaseDriver implements AuthDriver {
             .execute();
     }
 
-    async setMask(username: string, mask: number) {
+    async setUserMask(username: string, mask: number) {
         await this.users.createQueryBuilder()
             .update({ mask })
             .where({ username })
+            .execute();
+    }
+
+    createGroup(groupname: string): Promise<Group> {
+        const group = new Group();
+        group.name = groupname;
+        return this.groups.save(group);
+    }
+
+    async assignGroup(groupname: string, username: string) {
+        const group = await this.groups.findOneBy({ name: groupname });
+        await this.users.createQueryBuilder()
+            .update({ group })
+            .where({ username })
+            .execute();
+    }
+
+    async setGroupMask(groupname: string, mask: number) {
+        await this.groups.createQueryBuilder()
+            .update({ mask })
+            .where({ name: groupname })
             .execute();
     }
 

@@ -7,14 +7,21 @@ import { wireprim, bonk } from "@lucidvm/shared";
 
 import { ConfigOption, ConfigKey } from "../db/entities";
 
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const options: { [key: string]: {
+interface OptionMetadata {
+    // human-friendly name for the config item
     name?: string;
+    // human-friendly description
     description?: string;
+    // should this value be retrievable from the admin api?
     secret?: boolean;
+    // the type of this value
     type?: "string" | "number" | "boolean"
+    // the default value to use when not defined in the db
     get default(): wireprim;
-} } = {
+}
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const options: Record<ConfigKey, OptionMetadata> = {
     [ConfigKey.ListenHost]: {
         name: "Address",
         default: "0.0.0.0"
@@ -34,11 +41,13 @@ const options: { [key: string]: {
         secret: true,
         get default() { return [...crypto.randomBytes(64)].map(x => charset[x % charset.length]).join(""); }
     },
-    [ConfigKey.LegacyAuth]: {
-        name: "Enabled",
-        type: "boolean",
-        default: true
-    },
+    // XXX: UserPassword is not considered a secret, nor hashed
+    //      this is deliberate, as it is meant to be shared with others
+    //
+    //      maybe it should be, but i consider it no more important than
+    //      hashing the connect password for a game server...
+    //
+    //      user-specific passwords *are* hashed
     [ConfigKey.UserPassword]: {
         name: "User password",
         default: "hunter2"
@@ -46,6 +55,8 @@ const options: { [key: string]: {
 };
 
 export class ConfigManager extends EventEmitter {
+
+    private readonly cache: { [key: string]: string; } = {};
 
     readonly repo: Repository<ConfigOption>;
 
@@ -70,30 +81,40 @@ export class ConfigManager extends EventEmitter {
         }));
     }
 
-    async getOption(id: ConfigKey): Promise<string> {
-        if (!(id in options)) {
-            throw new Error("invalid config key accessed, this is a bug");
-        }
-        var opt = await this.repo.findOneBy({ id });
-        if (opt == null) {
-            opt = new ConfigOption();
-            opt.id = id;
-            opt.value = bonk(options[id].default);
-            await this.repo.save(opt);
-        }
-        return opt.value;
-    }
-
-    async setOption(id: ConfigKey, value: wireprim): Promise<void> {
+    isSecret(id: ConfigKey): boolean {
         if (!(id in options)) {
             throw new Error("invalid config key specified");
         }
-        const opt = new ConfigOption();
+        return !!options[id].secret;
+    }
+
+    async getOption(id: ConfigKey): Promise<string> {
+        if (!(id in options)) {
+            throw new Error("invalid config key specified");
+        }
+        if (id in this.cache) return this.cache[id];
+        var val: string;
+        var opt = await this.repo.findOneBy({ id });
+        if (opt == null) {
+            val = await this.setOption(id, options[id].default);
+        }
+        else {
+            val = opt.value;
+        }
+        return val;
+    }
+
+    async setOption(id: ConfigKey, value: wireprim): Promise<string> {
+        if (!(id in options)) {
+            throw new Error("invalid config key specified");
+        }
+        var opt = new ConfigOption();
         opt.id = id;
         opt.value = bonk(value);
-        await this.repo.save(opt);
+        opt = await this.repo.save(opt);
+        this.cache[id] = opt.value;
         this.emit(id, value);
-        return;
+        return opt.value;
     }
 
 }

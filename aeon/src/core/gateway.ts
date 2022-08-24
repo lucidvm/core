@@ -5,7 +5,7 @@ import bodyparser from "body-parser";
 import type { wireprim } from "@lucidvm/shared";
 
 import type { ChannelController } from "../controller";
-import { AuthDriver, AuthManager, XBTCodec } from "../auth";
+import { AuthManager } from "../auth";
 import { UploadManager } from "../routes";
 import { CommandManager } from "../commands";
 
@@ -24,7 +24,7 @@ export class EventGateway {
     readonly commands: CommandManager = new CommandManager();
     readonly uploads: UploadManager;
 
-    constructor(authsecret: string, readonly authMandate = false, readonly maxPost = 8_000_000) {
+    constructor(authsecret: string, public authMandate = false, readonly maxPost = 8_000_000) {
         this.auth = new AuthManager(authsecret);
         
         this.server = exprws(express());
@@ -59,6 +59,11 @@ export class EventGateway {
 
     registerController(controller: ChannelController) {
         this.controllers[controller.channel] = controller;
+    }
+
+    unregisterController(chan: string) {
+        delete this.controllers[chan];
+        this.send(chan, "chat", "", "The channel controller for this room has been detached. Please select a different room.");
     }
 
     getController(chan: string) {

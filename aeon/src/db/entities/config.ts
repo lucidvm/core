@@ -7,7 +7,6 @@ export enum ConfigKey {
     AuthMandatory = "gateway.auth.required",
     TokenSecret = "gateway.auth.tokenSecret",
 
-    LegacyAuth = "gateway.auth.legacy.enabled",
     UserPassword = "gateway.auth.legacy.connectPassword"
 }
 
