@@ -37,10 +37,25 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
 
+    // debug endpoints
     router.get("/debug/ping", (req, res) => {
         const identity: ClientIdentity = res.locals.identity;
         res.type("txt");
         res.send(`hello, ${identity.strategy}/${identity.id}!`);
+    });
+
+    // self
+    router.patch("/self", async (req, res) => {
+        if (typeof req.body.password === "undefined") {
+            res.status(400);
+            res.send({ error: "expected password" });
+            res.end();
+            return;
+        }
+        const identity: ClientIdentity = res.locals.identity;
+        await acl.setPassword(identity.id.toString(), req.body.password);
+        res.status(204);
+        res.end();
     });
 
     // global config
