@@ -1,6 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
 
-import { LegacyRank } from "../../auth";
+import { Flag } from "../../auth";
+
+import { Group } from "./group";
 
 @Entity()
 export class User {
@@ -21,9 +23,12 @@ export class User {
     @Column()
     fencepost: Date;
 
-    // the user's rank
-    // TODO: configurable ranks
-    @Column({ default: LegacyRank.Registered })
-    rank: LegacyRank;
+    // base permission mask for user
+    @Column({ default: Flag.Registered | Flag.VisibleUser })
+    mask: number;
+
+    // the user's group
+    @ManyToOne(() => Group, group => group.users, { eager: true })
+    group: Group;
 
 }

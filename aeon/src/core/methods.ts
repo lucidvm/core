@@ -164,7 +164,7 @@ export const defaultMethods: {
             case "json":
                 next = new JSONConduit();
                 break;
-            case "lec.disable":
+            case "lec":
                 next = new LECConduit(Codebooks.CVMP);
                 break;
             default:

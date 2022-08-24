@@ -1,6 +1,6 @@
 import express from "express";
 
-import { ClientIdentity, LegacyRank } from "../auth";
+import { ClientIdentity, Flag, hasFlag } from "../auth";
 import { EventGateway } from "../core";
 import { ConfigManager, MachineManager } from "../manager";
 
@@ -17,7 +17,7 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         if (token == null) { err(); return; }
         const identity = await gw.auth.validateToken(token);
         if (identity == null || identity.strategy !== "local" 
-            || identity.rank < LegacyRank.Administrator) { err(); return; }
+            || hasFlag(identity.flags, Flag.API)) { err(); return; }
         res.locals.identity = identity;
         next();
     });

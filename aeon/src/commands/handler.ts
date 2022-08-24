@@ -1,4 +1,4 @@
-import { LegacyRank } from "../auth";
+import { Flag, hasFlag } from "../auth";
 import type { ChannelController } from "../controller";
 import type { ClientContext, EventGateway } from "../core";
 
@@ -72,7 +72,7 @@ interface CommandDefinition {
     stealth?: boolean;
     minargs?: number;
     maxargs?: number;
-    minperms?: LegacyRank;
+    minperms?: Flag;
 }
 
 export interface CommandDefinitionStrict extends CommandDefinition {
@@ -84,7 +84,7 @@ export interface CommandDefinitionStrict extends CommandDefinition {
     stealth: boolean;
     minargs: number;
     maxargs: number;
-    minperms: LegacyRank;
+    minperms: Flag;
 }
 
 const PREFIX = "/";
@@ -109,8 +109,7 @@ export class CommandManager {
                 }
                 const data = this.commands[command];
 
-                const level = client.rank;
-                if (level < data.minperms) {
+                if (!hasFlag(client.mask, data.minperms)) {
                     // stealth commands just return immediately without an error
                     if (data.stealth) {
                         return;
@@ -206,7 +205,7 @@ export class CommandManager {
             stealth: false,
             minargs: 0,
             maxargs: 0,
-            minperms: LegacyRank.Anonymous
+            minperms: Flag.None
         }, data, { minargs, maxargs });
         this.commands[name] = cmddata;
         for (const alias of cmddata.alias) {

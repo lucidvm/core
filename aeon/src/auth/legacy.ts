@@ -1,11 +1,11 @@
-import { AuthDriver, ClientIdentity, LegacyRank } from "./base";
+import { AuthDriver, ClientIdentity, Flag } from "./base";
 
 const fencepost = new Date();
 
 const user = {
     strategy: "legacy",
     id: "user",
-    rank: LegacyRank.Registered,
+    flags: Flag.Registered | Flag.VisibleUser,
     fencepost
 };
 

@@ -2,8 +2,10 @@ import path from "path";
 
 import express, { Application } from "express";
 
-export function mountWebapp(app: Application) {
+import { EventGateway } from "../core";
+
+export function mountWebapp(gw: EventGateway) {
     const wabase = path.resolve(__dirname, "../../../flashback");
-    app.use(express.static(path.join(wabase, "dist")));
-    app.use(express.static(path.join(wabase, "static")));
+    gw.express.use(express.static(path.join(wabase, "dist")));
+    gw.express.use(express.static(path.join(wabase, "static")));
 }
