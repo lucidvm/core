@@ -40,20 +40,25 @@ export class XBTCodec<T extends any[]> {
     }
 
     private decode(token: string): TokenBody<T> {
-        const parts = token.split(SEP);
-        const bodybuff: Buffer = ZeroMQ.decode(parts[0]);
-        const signature: Buffer = ZeroMQ.decode(parts[1]);
+        try {
+            const parts = token.split(SEP);
+            const bodybuff: Buffer = ZeroMQ.decode(parts[0]);
+            const signature: Buffer = ZeroMQ.decode(parts[1]);
 
-        if (!sign(bodybuff, this.secret).equals(signature)) {
+            if (!sign(bodybuff, this.secret).equals(signature)) {
+                return null;
+            }
+
+            const bodyflat: FlatTokenBody<T> = deserialize(bodybuff);
+            const issued = new Date(bodyflat.shift() * 1000);
+            const claims = bodyflat as unknown as T;
+            const body: TokenBody<T> = { issued, claims };
+
+            return body;
+        }
+        catch (e) {
             return null;
         }
-
-        const bodyflat: FlatTokenBody<T> = deserialize(bodybuff);
-        const issued = new Date(bodyflat.shift() * 1000);
-        const claims = bodyflat as unknown as T;
-        const body: TokenBody<T> = { issued, claims };
-
-        return body;
     }
 
     issue(...claims: T): string {
