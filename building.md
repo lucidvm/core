@@ -1,6 +1,6 @@
 # Building LucidVM
 
-## aeon
+## aeon+virtue
 
 **Requirements**:
 - git
@@ -12,5 +12,7 @@
 git clone --recurse-submodules --remote-submodules https://github.com/lucidvm/core.git
 cd core
 # install and build everything
-yarn build-all
+yarn build-core
+# run aeon
+yarn run-gateway
 ```

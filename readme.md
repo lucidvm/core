@@ -13,7 +13,7 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 ### Applications
 
-- **aeon**: The actual server, written in TypeScript. Handles communication with clients, the "game logic" of CollabVM, event routing, transcoding VNC to Guac, etc. Requires a monitor to do anything useful.
+- **aeon**: The actual server, written in TypeScript. Handles communication with clients, the "game logic" of CollabVM, event routing, transcoding VNC to Guac, etc. Able to use a remote monitor (such as `vixen`), or the `virtue` monitor in-process.
 
 - **virtue**: Monitor implementation for QEMU/KVM.
 
