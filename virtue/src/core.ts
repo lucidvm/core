@@ -19,7 +19,7 @@ export interface QEMUOptions {
     ram?: number;
     vga?: string;
     nic?: string;
-    netprefix: string;
+    tap: string;
 
     vncbind?: string;
     vncpw: string;
@@ -48,7 +48,7 @@ export class QEMUMonitor extends EventEmitter {
         if (index == null) {
             throw new Error("index must be specified");
         }
-        if (options.root == null || options.netprefix == null || options.vncpw == null) {
+        if (options.root == null || options.tap == null || options.vncpw == null) {
             throw new Error("root, netprefix, vncpw must be specified");
         }
 
@@ -69,7 +69,7 @@ export class QEMUMonitor extends EventEmitter {
             "-m", options.ram?.toString() ?? "512",
             "-drive", `id=hda,file=${hdapath}`,
             "-vga", options.vga ?? "qxl",
-            "-netdev", `tap,id=tap,ifname=${options.netprefix}${index},script=no,downscript=no`,
+            "-netdev", `tap,id=tap,ifname=${options.tap},script=no,downscript=no`,
             "-device", `${options.nic ?? "virtio-net"},netdev=tap,mac=DE:AD:BE:EF:00:${index.toString().padStart(2, "0")}`,
             "-boot", "cd",
             "-usb",
