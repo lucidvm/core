@@ -2,7 +2,6 @@ import type { QEMUOptions } from "@lucidvm/virtue";
 
 import { UserRank } from "../auth";
 import { BaseMachine, LocalMachine } from "../controller";
-import { DatabaseDriver } from "../db";
 
 import type { ClientContext } from "./client";
 
@@ -51,7 +50,7 @@ export const commands: { [key: string]: (ctx: ClientContext, raw: string, ...arg
     },
 
     // FIXME: delete this entire command and make it suck less eventually
-    async snapshot(ctx) {
+    /*async snapshot(ctx) {
         const gw = ctx.gw;
         if (ctx.rank === UserRank.Administrator) {
             try {
@@ -76,6 +75,6 @@ export const commands: { [key: string]: (ctx: ClientContext, raw: string, ...arg
             }
         }
         else ctx.send("chat", "", "No.");
-    }
+    }*/
 
 };

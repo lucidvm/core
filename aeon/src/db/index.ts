@@ -1,218 +1,26 @@
-import crypto from "crypto";
 import path from "path";
 
-import { DataSource, Repository } from "typeorm";
-import { hash, compare } from "bcrypt";
+import { DataSource } from "typeorm";
 
-import { wireprim, bonk } from "@lucidvm/shared";
+import { User, Machine, ConfigOption } from "./entities";
 
-import { AuthDriver, ClientIdentity, UserRank } from "../auth";
+var db: DataSource;
 
-import { User, Machine, ConfigOption, ConfigKey } from "./entities";
-
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const options: { [key: string]: {
-    name?: string;
-    description?: string;
-    secret?: boolean;
-    type?: "string" | "number" | "boolean"
-    get default(): wireprim;
-} } = {
-    [ConfigKey.ListenHost]: {
-        name: "Address",
-        default: "0.0.0.0"
-    },
-    [ConfigKey.ListenPort]: {
-        name: "Port",
-        type: "number",
-        default: 9738
-    },
-    [ConfigKey.AuthMandatory]: {
-        name: "Require authentication?",
-        type: "boolean",
-        default: false
-    },
-    [ConfigKey.TokenSecret]: {
-        name: "Token secret",
-        secret: true,
-        get default() { return [...crypto.randomBytes(64)].map(x => charset[x % charset.length]).join(""); }
-    },
-    [ConfigKey.LegacyAuth]: {
-        name: "Enabled",
-        type: "boolean",
-        default: true
-    },
-    [ConfigKey.MasterPassword]: {
-        name: "Admin password",
-        default: null
-    },
-    [ConfigKey.UserPassword]: {
-        name: "User password",
-        default: "hunter2"
-    }
-};
-
-export class DatabaseDriver implements AuthDriver {
-
-    readonly id = "local";
-
-    readonly db: DataSource;
-
-    private config: Repository<ConfigOption>;
-    private machines: Repository<Machine>;
-    private users: Repository<User>;
-
-    constructor() {
-        this.db = new DataSource({
-            type: "better-sqlite3",
-            database: path.resolve(__dirname, "../..", "aeon.db"),
-            entities: [
-                ConfigOption,
-                Machine,
-                User
-            ],
-            synchronize: true,
-            logging: false
-        });
-    }
-
-    async init() {
-        if (this.db.isInitialized) return;
-        await this.db.initialize();
-        this.config = this.db.getRepository(ConfigOption);
-        this.machines = this.db.getRepository(Machine);
-        this.users = this.db.getRepository(User);
-    }
-
-    async deinit() {
-        await this.db.destroy();
-    }
-
-    // config keys
-
-    getConfigMetadata(): {
-        id: string;
-        name?: string;
-        description?: string;
-        secret?: boolean;
-        type?: "string" | "number" | "boolean"
-    }[] {
-        return Object.entries(options).map(x => ({
-            id: x[0],
-            name: x[1].name,
-            description: x[1].description,
-            secret: x[1].secret,
-            type: x[1].type
-        }));
-    }
-
-    async getOption(id: ConfigKey): Promise<string> {
-        if (!(id in options)) {
-            throw new Error("invalid config key accessed, this is a bug");
-        }
-        var opt = await this.config.findOneBy({ id });
-        if (opt == null) {
-            opt = new ConfigOption();
-            opt.id = id;
-            opt.value = bonk(options[id].default);
-            await this.config.save(opt);
-        }
-        return opt.value;
-    }
-
-    async setOption(id: ConfigKey, value: wireprim): Promise<void> {
-        if (!(id in options)) {
-            throw new Error("invalid config key specified");
-        }
-        const opt = new ConfigOption();
-        opt.id = id;
-        opt.value = bonk(value);
-        await this.config.save(opt);
-        return;
-    }
-
-    // machine stuff
-
-    getMachine(channel: string): Promise<Machine> {
-        return this.machines.findOneBy({ channel });
-    }
-
-    getAllMachines(): Promise<Machine[]> {
-        return this.machines.find();
-    }
-
-    async saveMachine(info: Machine): Promise<void> {
-        await this.machines.save(info);
-    }
-
-    // authdriver+user management stuff
-
-    useDriver() { return []; }
-
-    async identify(secret: string): Promise<ClientIdentity> {
-        const split = secret.indexOf(":");
-        if (split === -1) return null;
-
-        const username = secret.substring(0, split);
-        const password = secret.substring(split + 1);
-
-        const user = await this.users.findOneBy({ username });
-        if (user == null) return null;
-        if (!await compare(password, user.password)) return null;
-
-        return {
-            strategy: this.id,
-            id: user.id,
-            rank: user.rank
-        };
-    }
-
-    async getIdentity(id: number) {
-        const user = await this.users.findOneBy({ id });
-        if (user == null) return null;
-        return {
-            strategy: this.id,
-            id: user.id,
-            rank: user.rank
-        };
-    }
-
-    async getFencepost(id: number) {
-        const user = await this.users.findOneBy({ id });
-        if (user == null) return null;
-        return user.fencepost;
-    }
-
-    async register(username: string, password: string): Promise<ClientIdentity> {
-        var user = new User();
-        user.username = username;
-        user.password = await hash(password, 10);
-        user.fencepost = new Date();
-        user = await this.users.save(user);
-        return {
-            strategy: this.id,
-            id: user.id,
-            rank: UserRank.Registered
-        };
-    }
-
-    async setPassword(username: string, password: string) {
-        await this.users.createQueryBuilder()
-            .update({
-                password: await hash(password, 10),
-                fencepost: new Date()
-            })
-            .where({ username })
-            .execute();
-    }
-
-    async setRank(username: string, rank: UserRank) {
-        await this.users.createQueryBuilder()
-            .update({ rank })
-            .where({ username })
-            .execute();
-    }
-
+export async function initDatabase(): Promise<DataSource> {
+    if (db != null) return db;
+    db = new DataSource({
+        type: "better-sqlite3",
+        database: path.resolve(__dirname, "../..", "aeon.db"),
+        entities: [
+            ConfigOption,
+            Machine,
+            User
+        ],
+        synchronize: true,
+        logging: false
+    });
+    await db.initialize();
+    return db;
 }
 
-export { ConfigKey } from "./entities";
+export * from "./entities";

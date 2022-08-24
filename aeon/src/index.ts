@@ -3,44 +3,49 @@ import path from "path";
 import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
 import type { QEMUOptions } from "@lucidvm/virtue";
 
-import { DatabaseDriver, ConfigKey } from "./db";
-import { User } from "./db/entities";
+import { initDatabase, ConfigKey, User } from "./db";
 import { EventGateway } from "./core";
-import { SimplePasswordDriver, UserRank } from "./auth";
-import { BaseMachine, RemoteMachine } from "./controller";
+import { ConfigManager, MachineManager } from "./manager";
+import { DatabaseDriver, SimplePasswordDriver, UserRank } from "./auth";
+import { BaseMachine, RemoteMachine, LocalMachine } from "./controller";
 import { mountWebapp } from "./routes";
-import { LocalMachine } from "./controller/local";
+
+console.log("starting event gateway...!");
 
 // fire up the db
-const db = new DatabaseDriver();
-db.init().then(async () => {
+initDatabase().then(async db => {
+    // create managers
+    const config = new ConfigManager(db);
+    const mchmgr = new MachineManager(db);
+    const users = new DatabaseDriver(db);
+
     // create root user if it doesnt exist
-    if (await db.db.getRepository(User).findOneBy({ username: "root" }) == null) {
+    if (await users.repo.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
-        await db.register("root", "nebur123");
-        await db.setRank("root", UserRank.Administrator);
+        await users.register("root", "nebur123");
+        await users.setRank("root", UserRank.Administrator);
     }
 
     // instantiate the gateway and register the db as an auth driver
     const gw = new EventGateway(
-        await db.getOption(ConfigKey.TokenSecret),
-        ensureBoolean(await db.getOption(ConfigKey.AuthMandatory))
+        await config.getOption(ConfigKey.TokenSecret),
+        ensureBoolean(await config.getOption(ConfigKey.AuthMandatory))
     );
-    await gw.registerAuthDriver(db);
+    await gw.registerAuthDriver(users);
 
     // mount additional routes
     mountWebapp(gw.express);
 
     // register legacy driver if needed
-    if (await db.getOption(ConfigKey.LegacyAuth)) {
+    if (await config.getOption(ConfigKey.LegacyAuth)) {
         await gw.registerAuthDriver(new SimplePasswordDriver(
-            await db.getOption(ConfigKey.MasterPassword),
-            await db.getOption(ConfigKey.UserPassword)
+            await config.getOption(ConfigKey.MasterPassword),
+            await config.getOption(ConfigKey.UserPassword)
         ));
     }
 
     // register machines
-    const machines = await db.getAllMachines();
+    const machines = await mchmgr.getAllMachines();
     for (const info of machines) {
         console.log("adding " + info.channel);
         var machine: BaseMachine
@@ -57,7 +62,9 @@ db.init().then(async () => {
     }
     
     // start listening
-    const host = await db.getOption(ConfigKey.ListenHost);
-    const port = ensureNumber(await db.getOption(ConfigKey.ListenPort));
+    const host = await config.getOption(ConfigKey.ListenHost);
+    const port = ensureNumber(await config.getOption(ConfigKey.ListenPort));
     gw.listen(port, host);
+
+    console.debug("ready!");
 });
