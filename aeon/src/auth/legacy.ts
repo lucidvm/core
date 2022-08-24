@@ -2,12 +2,6 @@ import { AuthDriver, ClientIdentity, LegacyRank } from "./base";
 
 const fencepost = new Date();
 
-const root = {
-    strategy: "legacy",
-    id: "root",
-    rank: LegacyRank.Administrator,
-    fencepost
-};
 const user = {
     strategy: "legacy",
     id: "user",
@@ -20,10 +14,8 @@ export class SimplePasswordDriver implements AuthDriver {
     readonly id = "legacy";
 
     private passUser: string;
-    private passAdmin: string;
 
-    constructor(adminpass: string, userpass: string = null) {
-        this.passAdmin = adminpass;
+    constructor(userpass: string = null) {
         this.passUser = userpass;
     }
 
@@ -33,8 +25,6 @@ export class SimplePasswordDriver implements AuthDriver {
 
     getIdentity(id: string): ClientIdentity {
         switch (id) {
-            case "root":
-                return root;
             case "user":
                 return user;
         }
@@ -42,9 +32,6 @@ export class SimplePasswordDriver implements AuthDriver {
     }
 
     identify(secret: string): ClientIdentity {
-        if (this.passAdmin != null && secret === this.passAdmin) {
-            return root;
-        }
         if (this.passUser != null && secret === this.passUser) {
             return user;
         }

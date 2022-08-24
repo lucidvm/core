@@ -39,10 +39,6 @@ const options: { [key: string]: {
         type: "boolean",
         default: true
     },
-    [ConfigKey.MasterPassword]: {
-        name: "Admin password",
-        default: null
-    },
     [ConfigKey.UserPassword]: {
         name: "User password",
         default: "hunter2"

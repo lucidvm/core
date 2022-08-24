@@ -41,7 +41,6 @@ initDatabase().then(async db => {
     // register legacy driver if needed
     if (await config.getOption(ConfigKey.LegacyAuth)) {
         await gw.auth.registerDriver(new SimplePasswordDriver(
-            await config.getOption(ConfigKey.MasterPassword),
             await config.getOption(ConfigKey.UserPassword)
         ));
     }
