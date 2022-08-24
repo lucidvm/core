@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Entity, Column, OneToMany, PrimaryColumn } from "typeorm";
 
 import { Flag } from "../../auth";
 
@@ -7,12 +7,8 @@ import { User } from "./user";
 @Entity()
 export class Group {
 
-    // numeric id for group
-    @PrimaryGeneratedColumn()
-    id: number;
-
     // the group's name
-    @Column({ unique: true })
+    @PrimaryColumn()
     name: string;
 
     // additive permission mask for group

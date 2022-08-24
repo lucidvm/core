@@ -1,13 +1,11 @@
 import path from "path";
 
 import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
-import type { QEMUOptions } from "@lucidvm/virtue";
 
 import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
 import { LocalDriver, SimplePasswordDriver, Flag } from "./auth";
-import { BaseMachine, RemoteMachine, LocalMachine } from "./controller";
 import { mountWebapp, mountAdminAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
 
@@ -17,13 +15,13 @@ console.log("starting event gateway...!");
 initDatabase().then(async db => {
     // create managers
     const config = new ConfigManager(db);
-    const users = new LocalDriver(db);
+    const acl = new LocalDriver(db);
 
     // create root user if it doesnt exist
-    if (await users.users.findOneBy({ username: "root" }) == null) {
+    if (await acl.users.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
-        await users.register("root", "nebur123");
-        await users.setUserMask("root", Flag.All);
+        await acl.register("root", "nebur123");
+        await acl.setUserMask("root", Flag.All);
     }
 
     // instantiate the gateway and register the db as an auth driver
@@ -32,14 +30,14 @@ initDatabase().then(async db => {
         ensureBoolean(await config.getOption(ConfigKey.AuthMandatory))
     );
     config.on(ConfigKey.AuthMandatory, on => gw.authMandate = ensureBoolean(on));
-    await gw.auth.registerDriver(users);
+    await gw.auth.registerDriver(acl);
 
     // instantiate machine manager
     const mchmgr = new MachineManager(gw, db, path.join(__dirname, "..", "vms"));
 
     // mount additional routes
     mountWebapp(gw);
-    mountAdminAPI(gw, config, mchmgr);
+    mountAdminAPI(gw, config, mchmgr, acl);
 
     // register legacy driver
     const pwdrv = new SimplePasswordDriver(await config.getOption(ConfigKey.UserPassword));

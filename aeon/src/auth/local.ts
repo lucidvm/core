@@ -34,18 +34,18 @@ export class LocalDriver implements AuthDriver {
 
         return {
             strategy: this.id,
-            id: user.id,
+            id: user.username,
             flags: user.mask | user.group.mask,
             fencepost: user.fencepost
         };
     }
 
-    async getIdentity(id: number) {
-        const user = await this.users.findOneBy({ id });
+    async getIdentity(username: string) {
+        const user = await this.users.findOneBy({ username });
         if (user == null) return null;
         return {
             strategy: this.id,
-            id: user.id,
+            id: user.username,
             flags: user.mask | user.group.mask,
             fencepost: user.fencepost
         };
@@ -66,7 +66,7 @@ export class LocalDriver implements AuthDriver {
         user = await this.users.save(user);
         return {
             strategy: this.id,
-            id: user.id,
+            id: user.username,
             flags: user.mask,
             fencepost: user.fencepost
         };

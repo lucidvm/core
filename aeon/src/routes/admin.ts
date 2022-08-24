@@ -1,6 +1,6 @@
-import express, { Request, Response } from "express";
+import express, { Response } from "express";
 
-import { ClientIdentity, Flag, hasFlag } from "../auth";
+import { ClientIdentity, Flag, hasFlag, LocalDriver } from "../auth";
 import type { EventGateway } from "../core";
 import type { ConfigKey } from "../db";
 import type { ConfigManager, MachineManager } from "../manager";
@@ -15,7 +15,7 @@ function checkFlag(res: Response, flag: Flag): boolean {
     return false;
 }
 
-export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines: MachineManager) {
+export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines: MachineManager, acl: LocalDriver) {
     const router = express.Router();
     router.use(async (req, res, next) => {
         function err() {
@@ -120,7 +120,7 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
     router.patch("/machines/:channel/config", async (req, res) => {
-        if (checkFlag(res, Flag.ManageVMs)) return;
+        if (checkFlag(res, Flag.ManageRooms)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info != null) {
             await machines.configure(req.params.channel, req.body);
@@ -130,6 +130,30 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
             res.status(404);
             res.send({ error: "machine not found" });
         }
+        res.end();
+    });
+
+    // user management
+    router.get("/users", async (req, res) => {
+        if (checkFlag(res, Flag.ManageUsers)) return;
+        const entries = await acl.users.find();
+        // sanitize sensitive things out
+        res.send(entries.map(x => ({
+            username: x.username,
+            mask: x.mask,
+            group: x.group.name
+        })));
+        res.end();
+    });
+
+    // group management
+    router.get("/groups", async (req, res) => {
+        if (checkFlag(res, Flag.ManageGroups)) return;
+        const entries = await acl.groups.find();
+        res.send(entries.map(x => ({
+            name: x.name,
+            mask: x.mask
+        })));
         res.end();
     });
 

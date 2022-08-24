@@ -33,13 +33,21 @@ export enum Flag {
     Snapshot        = 1 << 13,
 
     // allows access to the admin api
-    API             = 1 << 24,
+    API             = 1 << 23,
     // allows modifying global config values
-    Config          = 1 << 25,
-    // allows managing machines
-    ManageVMs       = 1 << 26,
+    Config          = 1 << 24,
+    // create/destroy machines
+    ManageVMs       = 1 << 25,
+    // alter room config
+    ManageRooms     = 1 << 26,
+    // add/remove users, and assign them to groups
+    ManageUsers     = 1 << 27,
+    // allows creating groups
+    ManageGroups    = 1 << 28,
+    // allows altering permission masks on users and groups
+    ManagePrivs     = 1 << 29,
 
-    // instance root
+    // instance root, overrides immunity check
     Wheel           = 1 << 30,
     // all permissions
     All             = ~(~0 << 31)

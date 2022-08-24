@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Entity, Column, ManyToOne, PrimaryColumn } from "typeorm";
 
 import { Flag } from "../../auth";
 
@@ -7,12 +7,8 @@ import { Group } from "./group";
 @Entity()
 export class User {
 
-    // numeric id for user, only used for index
-    @PrimaryGeneratedColumn()
-    id: number;
-
     // the user's username
-    @Column({ unique: true })
+    @PrimaryColumn({ unique: true })
     username: string;
 
     // the user's bcrypt-hashed password
