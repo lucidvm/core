@@ -126,16 +126,15 @@ export const defaultMethods: {
         switch (ensureNumber(command)) {
             // repurpose the admin login prompt as an alternate way to access password auth
             case 2:
-                const driver = ctx.gw.getAuthStrategy("legacy");
-                if (driver == null) {
+                if (!ctx.gw.auth.hasStrategy("legacy")) {
                     // if simple auth is disabled, there's really not much we can do
-                    ctx.announce("Legacy password auth is disabled on this server.");
+                    ctx.announce("Legacy password auth is disabled on this instance.");
                     return;
                 }
-                const identity = await driver.identify(data);
+                const [identity, token] = await ctx.gw.auth.identify("legacy", data);
                 if (identity != null) {
                     if (ctx.level >= 1) {
-                        ctx.send("auth", AUTH_SESSION, ctx.gw.xbt.issue(identity.strategy, identity.id));
+                        ctx.send("auth", AUTH_SESSION, token);
                     }
                     ctx.setIdentity(identity);
                 }
@@ -192,49 +191,31 @@ export const defaultMethods: {
         stage = ensureNumber(stage);
         switch (stage) {
             case AUTH_ADVERTISE:
-                ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate, ...ctx.gw.getAuthStrategies());
+                ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate, ...ctx.gw.auth.getStrategies());
                 break;
             case AUTH_USE: {
-                const driver = ctx.gw.getAuthStrategy(data);
-                if (driver == null) {
+                const info = ctx.gw.auth.use(data);
+                if (info == null) {
                     ctx.send("auth", AUTH_NONSENSE);
                     return;
                 }
                 ctx.strategy = data;
-                ctx.send("auth", AUTH_USE, data, ...driver.useDriver());
+                ctx.send("auth", AUTH_USE, data, ...info);
                 break;
             }
             case AUTH_IDENTIFY: {
-                const driver = ctx.gw.getAuthStrategy(ctx.strategy);
-                // sanity check
-                if (driver == null) {
-                    ctx.send("auth", AUTH_REJECT);
-                    return;
-                }
-                const identity = await driver.identify(data);
+                const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
                 if (identity == null) {
                     ctx.send("auth", AUTH_REJECT);
                     return;
                 }
                 ctx.send("auth", AUTH_IDENTIFY);
-                ctx.send("auth", AUTH_SESSION, ctx.gw.xbt.issue(identity.strategy, identity.id));
+                ctx.send("auth", AUTH_SESSION, token);
                 ctx.setIdentity(identity);
                 break;
             }
             case AUTH_SESSION: {
-                // TODO: fencepost, so tokens can actually be revoked
-                const claims = await ctx.gw.xbt.getClaims(data, null);
-                if (claims == null) {
-                    ctx.send("auth", AUTH_STALE);
-                    return;
-                }
-                const [strategy, id] = claims;
-                const driver = ctx.gw.getAuthStrategy(strategy);
-                if (driver == null) {
-                    ctx.send("auth", AUTH_STALE);
-                    return;
-                }
-                const identity = await driver.getIdentity(id);
+                const identity = await ctx.gw.auth.validateToken(data);
                 if (identity == null) {
                     ctx.send("auth", AUTH_STALE);
                     return;

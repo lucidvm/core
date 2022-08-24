@@ -63,12 +63,17 @@ export class XBTCodec<T extends any[]> {
         });
     }
 
-    async getClaims(token: string, fencepost: Date | ((...body: T) => (Date | Promise<Date>))): Promise<T> {
+    getDate(token: string): Date {
         const body = this.decode(token);
-        if (typeof fencepost === "function") {
-            fencepost = await fencepost(...body.claims);
+        if (body == null) {
+            return null;
         }
-        if (body == null || (fencepost != null && body.issued < fencepost)) {
+        return body.issued;
+    }
+
+    getClaims(token: string): T {
+        const body = this.decode(token);
+        if (body == null) {
             return null;
         }
         return body.claims;

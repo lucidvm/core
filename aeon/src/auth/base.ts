@@ -1,4 +1,6 @@
-export enum UserRank {
+import { wireprim } from "@lucidvm/shared";
+
+export enum LegacyRank {
     Anonymous,
     Registered,
     Administrator,
@@ -9,14 +11,14 @@ export enum UserRank {
 export interface ClientIdentity {
     get strategy(): string;
     get id(): string | number;
-    get rank(): UserRank;
+    get rank(): LegacyRank;
+    get fencepost(): Date;
 }
 
 export interface AuthDriver {
     get id(): string;
     init(): void | Promise<void>;
-    useDriver(): any[];
+    useDriver(): wireprim[];
     getIdentity(id: string | number): ClientIdentity | Promise<ClientIdentity>;
-    getFencepost(id: string | number): Date | Promise<Date>;
     identify(secret: string): ClientIdentity | Promise<ClientIdentity>;
 }

@@ -1,21 +1,24 @@
-import { AuthDriver, ClientIdentity, UserRank } from "./base";
+import { AuthDriver, ClientIdentity, LegacyRank } from "./base";
+
+const fencepost = new Date();
 
 const root = {
     strategy: "legacy",
     id: "root",
-    rank: UserRank.Administrator
+    rank: LegacyRank.Administrator,
+    fencepost
 };
 const user = {
     strategy: "legacy",
     id: "user",
-    rank: UserRank.Registered
+    rank: LegacyRank.Registered,
+    fencepost
 };
 
 export class SimplePasswordDriver implements AuthDriver {
 
     readonly id = "legacy";
 
-    private fencepost = new Date();
     private passUser: string;
     private passAdmin: string;
 
@@ -36,10 +39,6 @@ export class SimplePasswordDriver implements AuthDriver {
                 return user;
         }
         return null;
-    }
-
-    getFencepost(): Date {
-        return this.fencepost;
     }
 
     identify(secret: string): ClientIdentity {

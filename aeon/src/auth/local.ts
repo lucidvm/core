@@ -1,7 +1,7 @@
 import { DataSource, Repository } from "typeorm";
 import { hash, compare } from "bcrypt";
 
-import { UserRank } from "../auth";
+import { LegacyRank } from "../auth";
 import { User } from "../db";
 
 import { AuthDriver, ClientIdentity } from "./base";
@@ -34,7 +34,8 @@ export class DatabaseDriver implements AuthDriver {
         return {
             strategy: this.id,
             id: user.id,
-            rank: user.rank
+            rank: user.rank,
+            fencepost: user.fencepost
         };
     }
 
@@ -44,7 +45,8 @@ export class DatabaseDriver implements AuthDriver {
         return {
             strategy: this.id,
             id: user.id,
-            rank: user.rank
+            rank: user.rank,
+            fencepost: user.fencepost
         };
     }
 
@@ -63,7 +65,8 @@ export class DatabaseDriver implements AuthDriver {
         return {
             strategy: this.id,
             id: user.id,
-            rank: UserRank.Registered
+            rank: LegacyRank.Registered,
+            fencepost: user.fencepost
         };
     }
 
@@ -77,7 +80,7 @@ export class DatabaseDriver implements AuthDriver {
             .execute();
     }
 
-    async setRank(username: string, rank: UserRank) {
+    async setRank(username: string, rank: LegacyRank) {
         await this.repo.createQueryBuilder()
             .update({ rank })
             .where({ username })

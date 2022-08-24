@@ -5,9 +5,9 @@ import bodyparser from "body-parser";
 import type { wireprim } from "@lucidvm/shared";
 
 import type { ChannelController } from "../controller";
-import { AuthDriver, XBTCodec } from "../auth";
+import { AuthDriver, AuthManager, XBTCodec } from "../auth";
 import { UploadManager } from "../routes";
-import { CommandHandler } from "../commands";
+import { CommandManager } from "../commands";
 
 import { ClientContext } from "./client";
 
@@ -18,16 +18,15 @@ export class EventGateway {
 
     private clients: { [k: number]: ClientContext } = {};
     private controllers: { [k: string]: ChannelController } = {};
-    private authdrivers: { [k: string]: AuthDriver } = {};
     private nextid: number = 0;
 
-    readonly commands: CommandHandler = new CommandHandler();
+    readonly auth: AuthManager;
+    readonly commands: CommandManager = new CommandManager();
     readonly uploads: UploadManager;
-    readonly xbt: XBTCodec<[string, string | number]>;
 
-    constructor(xbtsecret: string, readonly authMandate = false, readonly maxPost = 8_000_000) {
-        this.xbt = new XBTCodec(xbtsecret);
-
+    constructor(authsecret: string, readonly authMandate = false, readonly maxPost = 8_000_000) {
+        this.auth = new AuthManager(authsecret);
+        
         this.server = exprws(express());
         this.express = this.server.app;
 
@@ -69,20 +68,7 @@ export class EventGateway {
 
     getControllers() {
         return Object.values(this.controllers);
-    }
-
-    async registerAuthDriver(driver: AuthDriver) {
-        await driver.init();
-        this.authdrivers[driver.id] = driver;
-    }
-
-    getAuthStrategies() {
-        return Object.keys(this.authdrivers);
-    }
-
-    getAuthStrategy(key: string) {
-        return this.authdrivers[key];
-    }
+    }    
 
     getClients() {
         return Object.values(this.clients);

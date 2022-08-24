@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
-import { UserRank } from "../../auth";
+import { LegacyRank } from "../../auth";
 
 @Entity()
 export class User {
@@ -23,7 +23,7 @@ export class User {
 
     // the user's rank
     // TODO: configurable ranks
-    @Column({ default: UserRank.Registered })
-    rank: UserRank;
+    @Column({ default: LegacyRank.Registered })
+    rank: LegacyRank;
 
 }

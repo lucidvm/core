@@ -4,7 +4,7 @@ import { v4 } from "uuid";
 
 import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/shared";
 
-import { UserRank } from "../auth";
+import { LegacyRank } from "../auth";
 import type { ClientContext, EventGateway } from "../core";
 
 import { ChannelController } from "./base";
@@ -479,9 +479,9 @@ export abstract class BaseMachine extends ChannelController {
         }
 
         // ugly way of giving some time for automated handshaking
-        if (this.gw.authMandate && ctx.rank <= UserRank.Anonymous) {
+        if (this.gw.authMandate && ctx.rank <= LegacyRank.Anonymous) {
             setTimeout(() => {
-                if (ctx.rank <= UserRank.Anonymous) {
+                if (ctx.rank <= LegacyRank.Anonymous) {
                     ctx.announce("Authentication is mandatory on this server. Please log in.");    
                 }
             }, 250);

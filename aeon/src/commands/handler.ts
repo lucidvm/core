@@ -1,4 +1,4 @@
-import { UserRank } from "../auth";
+import { LegacyRank } from "../auth";
 import type { ChannelController } from "../controller";
 import type { ClientContext, EventGateway } from "../core";
 
@@ -72,7 +72,7 @@ interface CommandDefinition {
     stealth?: boolean;
     minargs?: number;
     maxargs?: number;
-    minperms?: UserRank;
+    minperms?: LegacyRank;
 }
 
 export interface CommandDefinitionStrict extends CommandDefinition {
@@ -84,12 +84,12 @@ export interface CommandDefinitionStrict extends CommandDefinition {
     stealth: boolean;
     minargs: number;
     maxargs: number;
-    minperms: UserRank;
+    minperms: LegacyRank;
 }
 
 const PREFIX = "/";
 
-export class CommandHandler {
+export class CommandManager {
     readonly commands: Record<string, CommandDefinitionStrict> = {};
 
     async handleMessage(client: ClientContext, content: string) {
@@ -206,7 +206,7 @@ export class CommandHandler {
             stealth: false,
             minargs: 0,
             maxargs: 0,
-            minperms: UserRank.Anonymous
+            minperms: LegacyRank.Anonymous
         }, data, { minargs, maxargs });
         this.commands[name] = cmddata;
         for (const alias of cmddata.alias) {

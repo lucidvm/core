@@ -6,9 +6,9 @@ import type { QEMUOptions } from "@lucidvm/virtue";
 import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
-import { DatabaseDriver, SimplePasswordDriver, UserRank } from "./auth";
+import { DatabaseDriver, SimplePasswordDriver, LegacyRank } from "./auth";
 import { BaseMachine, RemoteMachine, LocalMachine } from "./controller";
-import { mountWebapp } from "./routes";
+import { mountWebapp, mountAdminAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
 
 console.log("starting event gateway...!");
@@ -24,7 +24,7 @@ initDatabase().then(async db => {
     if (await users.repo.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
         await users.register("root", "nebur123");
-        await users.setRank("root", UserRank.Administrator);
+        await users.setRank("root", LegacyRank.Administrator);
     }
 
     // instantiate the gateway and register the db as an auth driver
@@ -32,14 +32,15 @@ initDatabase().then(async db => {
         await config.getOption(ConfigKey.TokenSecret),
         ensureBoolean(await config.getOption(ConfigKey.AuthMandatory))
     );
-    await gw.registerAuthDriver(users);
+    await gw.auth.registerDriver(users);
 
     // mount additional routes
     mountWebapp(gw.express);
+    mountAdminAPI(gw, config, mchmgr);
 
     // register legacy driver if needed
     if (await config.getOption(ConfigKey.LegacyAuth)) {
-        await gw.registerAuthDriver(new SimplePasswordDriver(
+        await gw.auth.registerDriver(new SimplePasswordDriver(
             await config.getOption(ConfigKey.MasterPassword),
             await config.getOption(ConfigKey.UserPassword)
         ));
