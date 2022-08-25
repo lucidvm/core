@@ -34,7 +34,7 @@ export const defaultMethods: {
         if (channel == null) return;
 
         // get controller, reject connect if no controller or not permitted
-        const controller = ctx.gw.getController(ctx.channel);
+        const controller = ctx.gw.getController(channel);
         if (controller == null || !controller.canUse(ctx)) {
             ctx.send("connect", 0);
             return;
@@ -51,7 +51,7 @@ export const defaultMethods: {
 
         // actually attach to the channel
         ctx.channel = channel;
-        ctx.gw.getController(ctx.channel)?.notifyJoin(ctx);
+        controller?.notifyJoin(ctx);
 
         // send channel peer list
         const peers = ctx.gw.getChannelClients(channel);
