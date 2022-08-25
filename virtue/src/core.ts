@@ -92,7 +92,7 @@ export class QEMUMonitor extends EventEmitter {
         for (var i = 0; i < options.tap.length; i++) {
             params.push(
                 "-netdev", `tap,id=tap${i},ifname=${options.tap[i]},script=no,downscript=no`,
-                "-device", `${options.nic ?? "virtio-net"},netdev=tap${i},mac=DE:AD:BE:EF:${index.toString(16).padStart(i, "0")}:${index.toString(16).padStart(2, "0")}`,
+                "-device", `${options.nic ?? "virtio-net"},netdev=tap${i},mac=DE:AD:BE:EF:${i.toString(16).padStart(2, "0")}:${index.toString(16).padStart(2, "0")}`,
             );
         }
 
