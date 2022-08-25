@@ -23,7 +23,9 @@ const confkeys: (keyof MachineConfig)[] = [
     "announceNick",
     "announceVote",
     "announceVoters",
-    "announceUpload"
+    "announceUpload",
+    "protected",
+    "internal"
 ];
 
 export class MachineManager extends EventEmitter {
