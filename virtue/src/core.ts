@@ -19,7 +19,7 @@ export interface QEMUOptions {
     ram?: number;
     vga?: string;
     nic?: string;
-    tap: string;
+    tap: string | string[];
 
     vncbind?: string;
     vncpw: string;
@@ -69,8 +69,6 @@ export class QEMUMonitor extends EventEmitter {
             "-m", options.ram?.toString() ?? "512",
             "-drive", `id=hda,file=${hdapath}`,
             "-vga", options.vga ?? "qxl",
-            "-netdev", `tap,id=tap,ifname=${options.tap},script=no,downscript=no`,
-            "-device", `${options.nic ?? "virtio-net"},netdev=tap,mac=DE:AD:BE:EF:00:${index.toString().padStart(2, "0")}`,
             "-boot", "cd",
             "-usb",
             "-device", "usb-tablet",
@@ -88,6 +86,15 @@ export class QEMUMonitor extends EventEmitter {
             "-chardev", `socket,id=agent,host=127.0.0.1,port=${5800 + index},server,nodelay,nowait`,
             "-device", "virtio-serial", "-device", "virtserialport,chardev=agent"
         ];
+
+        // add network devices
+        if (typeof options.tap === "string") options.tap = [options.tap];
+        for (var i = 0; i < options.tap.length; i++) {
+            params.push(
+                "-netdev", `tap,id=tap${i},ifname=${options.tap[i]},script=no,downscript=no`,
+                "-device", `${options.nic ?? "virtio-net"},netdev=tap${i},mac=DE:AD:BE:EF:${index.toString(16).padStart(i, "0")}:${index.toString(16).padStart(2, "0")}`,
+            );
+        }
 
         // use kvm if applicable
         // XXX: we should detect arm! not a big deal for now, though
