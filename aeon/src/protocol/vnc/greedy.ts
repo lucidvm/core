@@ -11,13 +11,13 @@ function scan(map: boolean[], x: number, width: number) {
     return true;
 }
 
-export function optimize(rects: Rect[], width: number, height: number, factor = 16): Rect[] {
+export function optimize(rects: Rect[], fbw: number, fbh: number, factor = 16): Rect[] {
     // get quantized fb size
-    const qw = Math.ceil(width / factor);
-    const qh = Math.ceil(height / factor);
+    const qw = Math.ceil(fbw / factor);
+    const qh = Math.ceil(fbh / factor);
 
     // build tile mask
-    const qmap: boolean[] = [];
+    const qmap: boolean[] = new Array(qw * qh);
     for (const rect of rects) {
         const x = Math.floor(rect.x / factor);
         const y = Math.floor(rect.y / factor);
@@ -33,20 +33,24 @@ export function optimize(rects: Rect[], width: number, height: number, factor = 
 
     // crawl the mask and combine tiles into chunks
     const qrects: Rect[] = [];
+    const rows: number[] = new Array(qw * qh);
     for (var y = 0; y < qh; y++) {
         const base = y * qw;
         for (var x = 0; x < qw; x++) {
             // skip unused tiles
             if (!qmap[base + x]) continue;
             // also skip if we've already found a rect here
-            if (qrects.find(r => r.y <= y && r.y + r.height > y && r.x <= x && r.x + r.width > x) != null) continue;
+            var row = rows[base + x];
+            if (row != null) { x += row - 1; continue; }
             // find the chunk width
             const sx = x;
             for (; x < qw && qmap[base + x]; x++);
             const width = x - sx;
+            rows[base + sx] = width;
             // find the chunk height
-            var height = y;
-            while (scan(qmap, ++height, width));
+            const bs = base + sx;
+            var height = 0;
+            while (scan(qmap, bs + ++height * qw, width)) rows[bs + height * qw] = width;
             // push the rect
             qrects.push({ x: sx, y, width, height });
         }
