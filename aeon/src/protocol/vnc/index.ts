@@ -2,6 +2,8 @@ import VNCClient from "./vncclient.js";
 
 import { ProtocolAdapter } from "../base";
 
+import { Rect, optimize } from "./greedy";
+
 const FPS = 60;
 
 export class VNCAdapter extends ProtocolAdapter {
@@ -58,12 +60,15 @@ export class VNCAdapter extends ProtocolAdapter {
             this.emit("rect", 0, 0, this.getFrameBuffer());
             this.emit("sync");
         });
-        
-        this.vnc.on("desktopSizeChanged", ({width, height}) => {
+
+        this.vnc.on("desktopSizeChanged", ({ width, height }) => {
             this.emit("resize", width, height);
         });
-        this.vnc.on("frameUpdated", (fb, rectinfo) => {
-            for (const rect of rectinfo) {
+        this.vnc.on("frameUpdated", (fb, rects: Rect[]) => {
+            if (rects.length > 4) {
+                rects = optimize(rects, this.vnc.clientWidth, this.vnc.clientHeight);
+            }
+            for (const rect of rects) {
                 const data = this.vnc.canvasdraw.getImageData(rect.x, rect.y, rect.width, rect.height);
                 this.emit("rect", rect.x, rect.y, data);
             }
