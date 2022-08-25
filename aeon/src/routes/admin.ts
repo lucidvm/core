@@ -67,6 +67,12 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
     });
     router.get("/config/:key", async (req, res) => {
         if (checkFlag(res, Flag.Config)) return;
+        if (!config.isValid(req.params.key as ConfigKey)) {
+            res.status(404);
+            res.send({ error: "invalid config key" });
+            res.end();
+            return;
+        }
         const value = config.isSecret(req.params.key as ConfigKey)
             ? "*******" // dont disclose secrets
             : await config.getOption(req.params.key as ConfigKey);
@@ -75,6 +81,12 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
     });
     router.post("/config/:key", async (req, res) => {
         if (checkFlag(res, Flag.Config)) return;
+        if (!config.isValid(req.params.key as ConfigKey)) {
+            res.status(404);
+            res.send({ error: "invalid config key" });
+            res.end();
+            return;
+        }
         if (typeof req.body.value !== "undefined") {
             await config.setOption(req.params.key as ConfigKey, req.body.value);
             res.status(202);

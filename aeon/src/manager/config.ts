@@ -97,6 +97,10 @@ export class ConfigManager extends EventEmitter {
         }));
     }
 
+    isValid(id: ConfigKey): boolean {
+        return id in options;
+    }
+
     isSecret(id: ConfigKey): boolean {
         if (!(id in options)) {
             throw new Error("invalid config key specified");
