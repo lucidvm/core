@@ -27,6 +27,11 @@ export enum Flag {
     // can always upload a file
     UploadOverride  = 1 << 8,
 
+    // can see/connect to protected machines
+    SeeProtected    = 1 << 9,
+    // can see/connect to internal machines
+    SeeInternal     = 1 << 10,
+
     // allows the user to force-reset a machine
     Reset           = 1 << 12,
     // allows the user to manage snapshots

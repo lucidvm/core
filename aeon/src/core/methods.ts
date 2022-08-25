@@ -33,6 +33,13 @@ export const defaultMethods: {
     connect(ctx, channel: wirestr) {
         if (channel == null) return;
 
+        // get controller, reject connect if no controller or not permitted
+        const controller = ctx.gw.getController(ctx.channel);
+        if (controller == null || !controller.canUse(ctx)) {
+            ctx.send("connect", 0);
+            return;
+        }
+
         // nick setup
         if (ctx.nick == null) ctx.guestify();
         if (ctx.gw.nickInUse(channel, ctx.nick)) {
@@ -66,7 +73,7 @@ export const defaultMethods: {
 
     list(ctx) {
         ctx.sendList(
-            ctx.gw.getControllers().map(x => ({
+            ctx.gw.getControllers().filter(x => x.canUse(ctx)).map(x => ({
                 id: x.channel,
                 name: x.displayName,
                 thumbnail: x.getThumbnail()

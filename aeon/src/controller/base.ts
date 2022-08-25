@@ -17,12 +17,14 @@ export abstract class ChannelController extends EventEmitter {
     }
 
     broadcast(...args: wireprim[]) {
-        this.gw.send(this.channel, ...args);
+        this.gw.sendSpecial(this.channel, c => this.canUse(c), () => args);
     }
 
     broadcastSpecial(generate: (ctx: ClientContext) => wireprim[], check: (ctx: ClientContext) => boolean = () => true) {
-        this.gw.sendSpecial(this.channel, check, generate);
+        this.gw.sendSpecial(this.channel, c => this.canUse(c) && check(c), generate);
     }
+
+    abstract canUse(ctx: ClientContext): boolean;
 
     abstract notifyJoin(ctx: ClientContext): void;
     abstract notifyPart(ctx: ClientContext): void;

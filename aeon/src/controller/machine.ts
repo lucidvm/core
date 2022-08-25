@@ -37,23 +37,26 @@ export enum MachineEvents {
 }
 
 export interface MachineConfig {
-    displayName: string,
-    motd: string,
+    displayName: string;
+    motd: string;
 
-    canTurn: boolean,
-    canVote: boolean,
-    canUpload: boolean,
+    canTurn: boolean;
+    canVote: boolean;
+    canUpload: boolean;
 
-    turnDuration: number,
-    voteDuration: number,
-    voteCooldown: number,
-    uploadCooldown: number,
+    turnDuration: number;
+    voteDuration: number;
+    voteCooldown: number;
+    uploadCooldown: number;
 
-    announceJoinPart: boolean,
-    announceNick: boolean,
-    announceVote: boolean,
-    announceVoters: boolean,
-    announceUpload: boolean
+    announceJoinPart: boolean;
+    announceNick: boolean;
+    announceVote: boolean;
+    announceVoters: boolean;
+    announceUpload: boolean;
+
+    protected: boolean;
+    internal: boolean;
 }
 
 // collabvm-compatible machine
@@ -92,7 +95,10 @@ export abstract class BaseMachine extends ChannelController {
         announceNick: true,
         announceVote: true,
         announceVoters: true,
-        announceUpload: true
+        announceUpload: true,
+
+        protected: false,
+        internal: false
     };
 
     protected cursorMetrics = {
@@ -157,16 +163,21 @@ export abstract class BaseMachine extends ChannelController {
         return this.options.displayName;
     }
 
+    override canUse(ctx: ClientContext) {
+        const pblocked = this.options.protected && !hasFlag(ctx.mask, Flag.SeeProtected);
+        const iblocked = this.options.internal && !hasFlag(ctx.mask, Flag.SeeInternal);
+        return !(pblocked || iblocked);
+    }
     canTakeTurn(ctx: ClientContext) {
-        return hasFlag(ctx.mask, Flag.TurnOverride) || this.options.canTurn;
+        return this.canUse(ctx) && (hasFlag(ctx.mask, Flag.TurnOverride) || this.options.canTurn);
     }
     canPlaceVote(ctx: ClientContext) {
         // it doesnt make much sense to have a "vote override" permission
-        return this.options.canVote;
+        return this.canUse(ctx) && this.options.canVote;
     }
     canUploadFile(ctx: ClientContext) {
         // TODO: factor in whether the backend actually supports uploads
-        return hasFlag(ctx.mask, Flag.UploadOverride) || this.options.canUpload;
+        return this.canUse(ctx) && (hasFlag(ctx.mask, Flag.UploadOverride) || this.options.canUpload);
     }
 
     // periodic routine

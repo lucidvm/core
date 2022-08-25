@@ -29,6 +29,12 @@ export class Machine implements MachineConfig {
     @Column({ default: "Welcome to LucidVM!" })
     motd: string;
 
+    @Column({ default: false })
+    protected: boolean;
+
+    @Column({ default: false })
+    internal: boolean;
+
 
     @Column({ default: true })
     canTurn: boolean;
