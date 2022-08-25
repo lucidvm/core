@@ -28,7 +28,8 @@ const anonpermitted: { [k:string]: boolean } = {
 
     extend: true,
     upgrade: true,
-    auth: true
+    auth: true,
+    instance: true
 };
 
 export class ClientContext {
