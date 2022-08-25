@@ -4,6 +4,10 @@ export enum ConfigKey {
     ListenHost = "gateway.listen.address",
     ListenPort = "gateway.listen.port",
 
+    InstanceName = "gateway.instance.name",
+    InstanceSysop = "gateway.instance.sysop",
+    InstanceContact = "gateway.instance.contact",
+
     AuthMandatory = "gateway.auth.required",
     TokenSecret = "gateway.auth.tokenSecret",
 

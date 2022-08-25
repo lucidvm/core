@@ -39,6 +39,24 @@ const options: Record<ConfigKey, OptionMetadata> = {
         type: "number",
         default: 9738
     },
+    [ConfigKey.InstanceName]: {
+        category: "Instance",
+        name: "Name",
+        description: "Name of this instance",
+        default: "LucidVM"
+    },
+    [ConfigKey.InstanceSysop]: {
+        category: "Instance",
+        name: "Sysop",
+        description: "Instance admin's name or handle",
+        default: "N/A"
+    },
+    [ConfigKey.InstanceContact]: {
+        category: "Instance",
+        name: "Contact",
+        description: "Admin contact info",
+        default: "N/A"
+    },
     [ConfigKey.AuthMandatory]: {
         category: "Auth",
         name: "Require authentication?",

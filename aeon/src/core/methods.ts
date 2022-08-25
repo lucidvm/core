@@ -235,10 +235,10 @@ export const defaultMethods: {
     },
 
     // retrieve information about this instance
-    instance(ctx) {
+    async instance(ctx) {
         // software, version, instance name, instance maintainer, instance contact details
-        // TODO: implement properly
-        ctx.send("instance", "LucidVM", "0.1.0-dev", "unset", "unset", "unset");
+        const info = ctx.gw.instanceInfo;
+        ctx.send("instance", "LucidVM", "DEV", info.name, info.sysop, info.contact);
     },
 
     // enable or disable sanitizing strings serverside

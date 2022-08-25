@@ -11,10 +11,22 @@ import { CommandManager } from "../commands";
 
 import { ClientContext } from "./client";
 
+export interface InstanceInfo {
+    name: string;
+    sysop: string;
+    contact: string;
+}
+
 export class EventGateway {
 
     private readonly server: Instance;
     readonly express: Application;
+
+    instanceInfo: InstanceInfo = {
+        name: "LucidVM",
+        sysop: "N/A",
+        contact: "N/A"
+    };
 
     private clients: { [k: number]: ClientContext } = {};
     private controllers: { [k: string]: ChannelController } = {};

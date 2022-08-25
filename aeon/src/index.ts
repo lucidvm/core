@@ -32,6 +32,14 @@ initDatabase().then(async db => {
     config.on(ConfigKey.AuthMandatory, on => gw.authMandate = ensureBoolean(on));
     await gw.auth.registerDriver(acl);
 
+    // set instance info
+    gw.instanceInfo.name = await config.getOption(ConfigKey.InstanceName);
+    config.on(ConfigKey.InstanceName, name => gw.instanceInfo.name = name);
+    gw.instanceInfo.sysop = await config.getOption(ConfigKey.InstanceSysop);
+    config.on(ConfigKey.InstanceSysop, sysop => gw.instanceInfo.sysop = sysop);
+    gw.instanceInfo.contact = await config.getOption(ConfigKey.InstanceContact);
+    config.on(ConfigKey.InstanceContact, contact => gw.instanceInfo.contact = contact);
+
     // instantiate machine manager
     const mchmgr = new MachineManager(gw, db, path.join(__dirname, "..", "vms"));
 
