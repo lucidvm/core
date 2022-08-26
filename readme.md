@@ -4,7 +4,7 @@ An alternate backend server compatible with CollabVM 1.2, with optional protocol
 
 This is a revisiting, roughly five years later, of a similar ill-fated project called LunaVM.
 
-All code is licensed under 3-clause BSD unless otherwise stated.
+The core gateway server, `aeon`, is licensed under AGPLv3. All other code is licensed under 3-clause BSD unless otherwise stated.
 
 This software is currently **pre-alpha**, and at this stage, **I will not assist in using it**. Please wait until a more mature release!
 

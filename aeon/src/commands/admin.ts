@@ -1,4 +1,7 @@
-import type { QEMUOptions } from "@lucidvm/virtue";
+// aeon: an enhanced reimplementation of the CollabVM server
+// Copyright (C) 2022 dither
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { AuthCap } from "../auth";
 
 import { BaseMachine, LocalMachine } from "../controller";

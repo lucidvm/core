@@ -4,7 +4,7 @@
   "description": "LucidVM Gateway Server",
   "main": "dist/index.js",
   "author": "dither",
-  "license": "BSD-3-Clause",
+  "license": "AGPL-3.0-only",
   "private": true,
   "scripts": {
     "build": "tsc",

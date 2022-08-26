@@ -1,3 +1,7 @@
+// aeon: an enhanced reimplementation of the CollabVM server
+// Copyright (C) 2022 dither
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { AuthCap, hasCap } from "../auth";
 import type { ChannelController } from "../controller";
 import type { ClientContext, EventGateway } from "../core";

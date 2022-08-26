@@ -1,3 +1,7 @@
+// aeon: an enhanced reimplementation of the CollabVM server
+// Copyright (C) 2022 dither
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // the problem:
 //  - certain implementations of rfb/vnc are incredibly spammy with updates
 //  - qemu in particular is terrible about flooding very small updates quickly

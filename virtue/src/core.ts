@@ -205,24 +205,11 @@ export class QEMUMonitor extends EventEmitter {
 
     snapshot(name: string) {
         this.snapshotname = name;
-        /*this.do("snapshot-save", {
-            tag: name,
-            "job-id": "snapshot",
-            vmstate: "hda",
-            devices: ["hda"]
-        });*/
-        // fuck this.
         this.hmp(`savevm ${name}`);
     }
 
     reset() {
         if (this.snapshotname != null) {
-            /*this.do("snapshot-load", {
-                tag: this.snapshotname,
-                "job-id": "reset",
-                vmstate: "hda",
-                devices: ["hda"]
-            });*/
             this.hmp(`loadvm ${this.snapshotname}`);
         }
         else {

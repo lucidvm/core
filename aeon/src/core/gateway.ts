@@ -1,3 +1,7 @@
+// aeon: an enhanced reimplementation of the CollabVM server
+// Copyright (C) 2022 dither
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import express from "express";
 import exprws, { Application, Instance } from "express-ws";
 import bodyparser from "body-parser";
