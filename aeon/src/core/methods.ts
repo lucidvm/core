@@ -198,7 +198,8 @@ export const defaultMethods: {
         stage = ensureNumber(stage);
         switch (stage) {
             case AUTH_ADVERTISE:
-                ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate, ...ctx.gw.auth.getStrategies());
+                ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate,
+                    ...ctx.gw.auth.getStrategies().filter(x => x !== "internal"));
                 break;
             case AUTH_USE: {
                 const info = ctx.gw.auth.use(data);
