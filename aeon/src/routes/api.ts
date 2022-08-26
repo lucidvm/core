@@ -15,7 +15,7 @@ function checkCap(res: Response, cap: Cap): boolean {
     return false;
 }
 
-export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines: MachineManager, acl: LocalDriver) {
+export function mountAPI(gw: EventGateway, config: ConfigManager, machines: MachineManager, acl: LocalDriver) {
     const router = express.Router();
     router.use(async (req, res, next) => {
         function err() {
@@ -192,5 +192,5 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
 
-    gw.express.use("/api/admin", router);
+    gw.express.use("/api", router);
 }

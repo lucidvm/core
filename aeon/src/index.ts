@@ -6,7 +6,7 @@ import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
 import { LocalDriver, SimplePasswordDriver, Cap, AuthManager, InternalDriver } from "./auth";
-import { mountWebapp, mountAdminAPI } from "./routes";
+import { mountWebapp, mountAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
 
 console.log("starting event gateway...!");
@@ -49,7 +49,7 @@ initDatabase().then(async db => {
 
     // mount additional routes
     mountWebapp(gw);
-    mountAdminAPI(gw, config, mchmgr, acl);
+    mountAPI(gw, config, mchmgr, acl);
 
     // register legacy driver
     const pwdrv = new SimplePasswordDriver(await config.getOption(ConfigKey.UserPassword));
