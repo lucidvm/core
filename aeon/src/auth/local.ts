@@ -3,11 +3,29 @@ import { hash, compare } from "bcrypt";
 
 import { User, Group } from "../db";
 
-import { AuthDriver, ClientIdentity } from "./base";
+import { AuthDriver, ClientIdentity, Cap } from "./base";
 
+const strategy = "local";
+
+function deriveBits(user: User): number {
+    // apply group permissions
+    // also strip erroneously applied system perms
+    return (user.caps | user.group.caps) & ~Cap.System;
+}
+
+function deriveIdentity(user: User): ClientIdentity {
+    return {
+        strategy,
+        id: user.username,
+        caps: deriveBits(user),
+        fencepost: user.fencepost
+    };
+}
+
+// implements local database-backed auth
 export class LocalDriver implements AuthDriver {
 
-    readonly id = "local";
+    readonly id = strategy;
 
     readonly users: Repository<User>;
     readonly groups: Repository<Group>;
@@ -32,23 +50,13 @@ export class LocalDriver implements AuthDriver {
         if (user == null) return null;
         if (!await compare(password, user.password)) return null;
 
-        return {
-            strategy: this.id,
-            id: user.username,
-            flags: user.mask | user.group.mask,
-            fencepost: user.fencepost
-        };
+        return deriveIdentity(user);
     }
 
     async getIdentity(username: string) {
         const user = await this.users.findOneBy({ username });
         if (user == null) return null;
-        return {
-            strategy: this.id,
-            id: user.username,
-            flags: user.mask | user.group.mask,
-            fencepost: user.fencepost
-        };
+        return deriveIdentity(user);
     }
 
     async register(username: string, password: string): Promise<ClientIdentity> {
@@ -64,12 +72,7 @@ export class LocalDriver implements AuthDriver {
         user.password = await hash(password, 10);
         user.fencepost = new Date();
         user = await this.users.save(user);
-        return {
-            strategy: this.id,
-            id: user.username,
-            flags: user.mask,
-            fencepost: user.fencepost
-        };
+        return deriveIdentity(user);
     }
 
     async setPassword(username: string, password: string) {
@@ -82,9 +85,9 @@ export class LocalDriver implements AuthDriver {
             .execute();
     }
 
-    async setUserMask(username: string, mask: number) {
+    async setUserCaps(username: string, caps: number) {
         await this.users.createQueryBuilder()
-            .update({ mask })
+            .update({ caps })
             .where({ username })
             .execute();
     }
@@ -103,9 +106,9 @@ export class LocalDriver implements AuthDriver {
             .execute();
     }
 
-    async setGroupMask(groupname: string, mask: number) {
+    async setGroupCaps(groupname: string, caps: number) {
         await this.groups.createQueryBuilder()
-            .update({ mask })
+            .update({ caps })
             .where({ name: groupname })
             .execute();
     }

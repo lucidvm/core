@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, PrimaryColumn } from "typeorm";
 
-import { Flag } from "../../auth";
+import { Cap } from "../../auth";
 
 import { Group } from "./group";
 
@@ -19,9 +19,9 @@ export class User {
     @Column()
     fencepost: Date;
 
-    // base permission mask for user
-    @Column({ default: Flag.Registered | Flag.VisibleUser })
-    mask: number;
+    // base caps for user
+    @Column({ default: Cap.Registered | Cap.VisibleUser })
+    caps: number;
 
     // the user's group
     @ManyToOne(() => Group, group => group.users, { eager: true })

@@ -32,13 +32,10 @@ export class EventGateway {
     private controllers: { [k: string]: ChannelController } = {};
     private nextid: number = 0;
 
-    readonly auth: AuthManager;
     readonly commands: CommandManager = new CommandManager();
     readonly uploads: UploadManager;
 
-    constructor(authsecret: string, public authMandate = false, readonly maxPost = 8_000_000) {
-        this.auth = new AuthManager(authsecret);
-        
+    constructor(readonly auth: AuthManager, public authMandate = false, readonly maxPost = 8_000_000) {
         this.server = exprws(express());
         this.express = this.server.app;
 

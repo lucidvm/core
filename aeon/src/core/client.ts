@@ -8,7 +8,7 @@ import {
     EventConduit, GuacConduit
 } from "@lucidvm/shared";
 
-import { ClientIdentity, Flag, getLegacyRank, hasFlag } from "../auth";
+import { ClientIdentity, Cap, getLegacyRank, hasCap } from "../auth";
 
 import type { EventGateway } from "./gateway";
 import { defaultMethods } from "./methods";
@@ -42,7 +42,7 @@ export class ClientContext {
     strip = true;
 
     strategy: string = "anonymous";
-    mask: number = Flag.None;
+    caps: number = Cap.None;
 
     nick: string;
     channel: string = null;
@@ -59,7 +59,7 @@ export class ClientContext {
                 const stmts = this.conduit.unpack(x);
                 for (const stmt of stmts) {
                     const opcode = ensureString(stmt.shift());
-                    if (gw.authMandate && !hasFlag(this.mask, Flag.Registered) && !anonpermitted[opcode]) {
+                    if (gw.authMandate && !hasCap(this.caps, Cap.Registered) && !anonpermitted[opcode]) {
                         console.warn("rejected opcode " + opcode + " from unauthenticated user");
                         return;
                     }
@@ -98,7 +98,7 @@ export class ClientContext {
     }
 
     setIdentity(identity: ClientIdentity) {
-        this.mask = identity.flags;
+        this.caps = identity.caps;
         if (this.channel != null) {
             this.gw.announcePeer(this);
             this.gw.getController(this.channel)?.notifyIdentify(this);
@@ -130,7 +130,7 @@ export class ClientContext {
     }
 
     sendPeers(peers: ClientContext[], leaving = false) {
-        var data: [string, number?][] = peers.map(x => leaving ? [x.nick] : [x.nick, getLegacyRank(x.mask)]);
+        var data: [string, number?][] = peers.map(x => leaving ? [x.nick] : [x.nick, getLegacyRank(x.caps)]);
         if (this.strip) data.map(x => x[0] = this.sanitize(x[0]));
         this.send(leaving ? "remuser" : "adduser", peers.length, ...data.flat());
     }

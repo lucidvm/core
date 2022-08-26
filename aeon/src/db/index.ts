@@ -2,7 +2,7 @@ import path from "path";
 
 import { DataSource } from "typeorm";
 
-import { User, Machine, ConfigOption, Group } from "./entities";
+import { User, Machine, ConfigOption, Group, Revocation } from "./entities";
 
 var db: DataSource;
 
@@ -15,7 +15,8 @@ export async function initDatabase(): Promise<DataSource> {
             ConfigOption,
             Machine,
             User,
-            Group
+            Group,
+            Revocation
         ],
         synchronize: true,
         logging: false

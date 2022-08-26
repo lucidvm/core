@@ -7,9 +7,10 @@ import { serialize, deserialize } from "@lucidvm/shared";
 
 const SEP = "~";
 
-type FlatTokenBody<T extends any[]> = [number, ...T];
+type FlatTokenBody<T extends any[]> = [number, number, ...T];
 interface TokenBody<T extends any[]> {
     issued: Date,
+    expires: Date,
     claims: T
 }
 
@@ -25,8 +26,12 @@ export class XBTCodec<T extends any[]> {
     }
 
     private encode(token: TokenBody<T>): string {
+        const start = Math.floor(token.issued.getTime() / 1000);
+        const lifetime = token.expires == null ? null
+            : Math.floor(token.expires.getTime() / 1000) - start;
+
         const bodyflat: FlatTokenBody<T> = [
-            Math.floor(token.issued.getTime() / 1000),
+            start, lifetime,
             ...token.claims
         ];
         const bodybuff = Buffer.from(serialize(bodyflat));
@@ -50,9 +55,23 @@ export class XBTCodec<T extends any[]> {
             }
 
             const bodyflat: FlatTokenBody<T> = deserialize(bodybuff);
-            const issued = new Date(bodyflat.shift() * 1000);
+            const start = bodyflat.shift() * 1000;
+            const issued = new Date(start);
+            const lifetime = bodyflat.shift();
+            const expires = lifetime == null ? null : lifetime * 1000 + start;
+
+            // die here if the token has expired
+            if (expires != null && Date.now() > expires) {
+                return null;
+            }
+
+            // trust me, i know what im doing (maybe)
             const claims = bodyflat as unknown as T;
-            const body: TokenBody<T> = { issued, claims };
+            const body: TokenBody<T> = {
+                issued,
+                expires: new Date(expires),
+                claims
+            };
 
             return body;
         }
@@ -64,23 +83,28 @@ export class XBTCodec<T extends any[]> {
     issue(...claims: T): string {
         return this.encode({
             issued: new Date(),
+            expires: null,
             claims
         });
     }
 
+    issueTimed(expires: Date, ...claims: T) {
+        return this.encode({
+            issued: new Date(),
+            expires,
+            claims
+        });
+    }
+
+    getExpiry(token: string): Date {
+        return this.decode(token)?.expires;
+    }
+
     getDate(token: string): Date {
-        const body = this.decode(token);
-        if (body == null) {
-            return null;
-        }
-        return body.issued;
+        return this.decode(token)?.issued;
     }
 
     getClaims(token: string): T {
-        const body = this.decode(token);
-        if (body == null) {
-            return null;
-        }
-        return body.claims;
+        return this.decode(token)?.claims;
     }
 }

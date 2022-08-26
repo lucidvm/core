@@ -5,7 +5,7 @@ import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
 import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
-import { LocalDriver, SimplePasswordDriver, Flag } from "./auth";
+import { LocalDriver, SimplePasswordDriver, Cap, AuthManager, InternalDriver } from "./auth";
 import { mountWebapp, mountAdminAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
 
@@ -15,22 +15,26 @@ console.log("starting event gateway...!");
 initDatabase().then(async db => {
     // create managers
     const config = new ConfigManager(db);
+    const auth = new AuthManager(db,
+        await config.getOption(ConfigKey.TokenSecret));
+
+    // register auth drivers
+    const sys = new InternalDriver();
+    await auth.registerDriver(sys);
     const acl = new LocalDriver(db);
+    await auth.registerDriver(acl);
 
     // create root user if it doesnt exist
     if (await acl.users.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
         await acl.register("root", "nebur123");
-        await acl.setUserMask("root", Flag.All);
+        await acl.setUserCaps("root", Cap.All);
     }
 
-    // instantiate the gateway and register the db as an auth driver
-    const gw = new EventGateway(
-        await config.getOption(ConfigKey.TokenSecret),
-        ensureBoolean(await config.getOption(ConfigKey.AuthMandatory))
-    );
+    // instantiate the gateway
+    const gw = new EventGateway(auth,
+        ensureBoolean(await config.getOption(ConfigKey.AuthMandatory)));
     config.on(ConfigKey.AuthMandatory, on => gw.authMandate = ensureBoolean(on));
-    await gw.auth.registerDriver(acl);
 
     // set instance info
     gw.instanceInfo.name = await config.getOption(ConfigKey.InstanceName);
@@ -50,7 +54,7 @@ initDatabase().then(async db => {
     // register legacy driver
     const pwdrv = new SimplePasswordDriver(await config.getOption(ConfigKey.UserPassword));
     config.on(ConfigKey.UserPassword, pw => pwdrv.password = pw);
-    await gw.auth.registerDriver(pwdrv);
+    await auth.registerDriver(pwdrv);
 
     // register chat commands
     gw.commands.register({

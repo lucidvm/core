@@ -1,12 +1,12 @@
 import express, { Response } from "express";
 
-import { ClientIdentity, Flag, hasFlag, LocalDriver } from "../auth";
+import { ClientIdentity, Cap, hasCap, LocalDriver } from "../auth";
 import type { EventGateway } from "../core";
 import type { ConfigKey } from "../db";
 import type { ConfigManager, MachineManager } from "../manager";
 
-function checkFlag(res: Response, flag: Flag): boolean {
-    if (!hasFlag(res.locals.identity.flags, flag)) {
+function checkCap(res: Response, cap: Cap): boolean {
+    if (!hasCap(res.locals.identity.caps, cap)) {
         res.status(403);
         res.send({ error: "unauthorized" });
         res.end();
@@ -25,9 +25,11 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         }
         const token = req.header("Authorization");
         if (token == null) { err(); return; }
+        res.locals.token = token;
         const identity = await gw.auth.validateToken(token);
-        if (identity == null || identity.strategy !== "local" || !hasFlag(identity.flags, Flag.API)) { err(); return; }
+        if (identity == null || identity.strategy !== "local" || !hasCap(identity.caps, Cap.API)) { err(); return; }
         res.locals.identity = identity;
+        res.header("Authorization", token);
         next();
     });
     router.use(express.json());
@@ -57,16 +59,22 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.status(204);
         res.end();
     });
+    router.post("/self/logout", async (req, res) => {
+        await gw.auth.revoke(res.locals.token);
+        res.removeHeader("Authorization");
+        res.status(204);
+        res.end();
+    });
 
     // global config
     router.get("/config", (req, res) => {
-        if (checkFlag(res, Flag.Config)) return;
+        if (checkCap(res, Cap.Config)) return;
         const keys = config.getConfigMetadata();
         res.send(keys);
         res.end();
     });
     router.get("/config/:key", async (req, res) => {
-        if (checkFlag(res, Flag.Config)) return;
+        if (checkCap(res, Cap.Config)) return;
         if (!config.isValid(req.params.key as ConfigKey)) {
             res.status(404);
             res.send({ error: "invalid config key" });
@@ -80,7 +88,7 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
     router.post("/config/:key", async (req, res) => {
-        if (checkFlag(res, Flag.Config)) return;
+        if (checkCap(res, Cap.Config)) return;
         if (!config.isValid(req.params.key as ConfigKey)) {
             res.status(404);
             res.send({ error: "invalid config key" });
@@ -100,13 +108,13 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
 
     // machine config
     router.get("/machines", async (req, res) => {
-        if (checkFlag(res, Flag.ManageVMs)) return;
+        if (checkCap(res, Cap.ManageVMs)) return;
         const entries = await machines.repo.find();
         res.send(entries);
         res.end();
     });
     router.put("/machines/:channel", async (req, res) => {
-        if (checkFlag(res, Flag.ManageVMs)) return;
+        if (checkCap(res, Cap.ManageVMs)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info == null) {
             if (
@@ -134,7 +142,7 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
     router.delete("/machines/:channel", async (req, res) => {
-        if (checkFlag(res, Flag.ManageVMs)) return;
+        if (checkCap(res, Cap.ManageVMs)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info != null) {
             await machines.destroy(req.params.channel);
@@ -147,7 +155,7 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
         res.end();
     });
     router.patch("/machines/:channel/config", async (req, res) => {
-        if (checkFlag(res, Flag.ManageRooms)) return;
+        if (checkCap(res, Cap.ManageRooms)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info != null) {
             await machines.configure(req.params.channel, req.body);
@@ -162,12 +170,12 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
 
     // user management
     router.get("/users", async (req, res) => {
-        if (checkFlag(res, Flag.ManageUsers)) return;
+        if (checkCap(res, Cap.ManageUsers)) return;
         const entries = await acl.users.find();
         // sanitize sensitive things out
         res.send(entries.map(x => ({
             username: x.username,
-            mask: x.mask,
+            caps: x.caps,
             group: x.group.name
         })));
         res.end();
@@ -175,11 +183,11 @@ export function mountAdminAPI(gw: EventGateway, config: ConfigManager, machines:
 
     // group management
     router.get("/groups", async (req, res) => {
-        if (checkFlag(res, Flag.ManageGroups)) return;
+        if (checkCap(res, Cap.ManageGroups)) return;
         const entries = await acl.groups.find();
         res.send(entries.map(x => ({
             name: x.name,
-            mask: x.mask
+            caps: x.caps
         })));
         res.end();
     });

@@ -48,7 +48,7 @@ export function greedy(rects: Rect[], fbw: number, fbh: number, factor = 16): Re
         }
     }
 
-    // crawl the mask and combine tiles into chunks
+    // crawl the map and combine tiles into rects
     // conceptually a variant of a greedy meshing algorithm
     const qrects: Rect[] = [];
     // runs map, used to skip tiles already belonging to a rect
@@ -64,14 +64,14 @@ export function greedy(rects: Rect[], fbw: number, fbh: number, factor = 16): Re
             if (run != null) { x += run - 1; continue; }
 
             // 2. we've found a relevant dirty tile
-            // let's find the chunk width
+            // let's find the rect width
             // crawl to the right until we hit a clean tile
             const x1 = x;
             for (; x < qw && tiles[base + x]; x++);
             const width = x - x1;
 
-            // 3. we now know the width of the chunk
-            // now find the chunk height
+            // 3. we now know the width of the rect
+            // now find the rect height
             // crawl downward until we hit a clean tile
             //
             // record the rect width at (x1,y1+h) in the runs map as we crawl

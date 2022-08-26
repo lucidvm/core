@@ -8,7 +8,7 @@ enum LegacyRank {
     Developer
 }
 
-export enum Flag {
+export enum Cap {
     // no permissions at all
     None            = 1 << 0,
     // known user
@@ -31,13 +31,25 @@ export enum Flag {
     SeeProtected    = 1 << 9,
     // can see/connect to internal machines
     SeeInternal     = 1 << 10,
+    // can see just about everything
+    Auspex          = 1 << 11,
 
     // allows the user to force-reset a machine
     Reset           = 1 << 12,
     // allows the user to manage snapshots
     Snapshot        = 1 << 13,
 
-    // allows access to the admin api
+    // can generate invite tokens
+    Invite          = 1 << 19,
+    // can generate password reset tokens for any user
+    ResetPassword   = 1 << 20,
+
+    // special cap for invite tokens
+    Register        = 1 << 21,
+    // special cap for password reset tokens
+    SetPassword     = 1 << 22,
+
+    // allows access to the api
     API             = 1 << 23,
     // allows modifying global config values
     Config          = 1 << 24,
@@ -49,19 +61,22 @@ export enum Flag {
     ManageUsers     = 1 << 27,
     // allows creating groups
     ManageGroups    = 1 << 28,
-    // allows altering permission masks on users and groups
+    // allows altering caps on users and groups
     ManagePrivs     = 1 << 29,
 
     // instance root, overrides immunity check
     Wheel           = 1 << 30,
-    // all permissions
-    All             = ~(~0 << 31)
+
+    // all special permissions
+    System          = Cap.Register | Cap.ResetPassword,
+    // all user permissions
+    All             = ~(~0 << 31) & ~System,
 }
 
 export interface ClientIdentity {
     get strategy(): string;
     get id(): string | number;
-    get flags(): number;
+    get caps(): number;
     get fencepost(): Date;
 }
 
@@ -73,15 +88,22 @@ export interface AuthDriver {
     identify(secret: string): ClientIdentity | Promise<ClientIdentity>;
 }
 
-export function hasFlag(flags: number, flag: Flag): boolean {
-    if ((flags & Flag.Wheel) === Flag.Wheel) return true;
-    return (flags & flag) === flag;
+export function hasCap(caps: number, cap: Cap): boolean {
+    if ((caps & Cap.Wheel) === Cap.Wheel) return true;
+    return (caps & cap) === cap;
 }
 
-export function getLegacyRank(flags: number): LegacyRank {
-    if (hasFlag(flags, Flag.VisibleAdmin)) return LegacyRank.Administrator;
-    if (hasFlag(flags, Flag.VisibleDev)) return LegacyRank.Developer;
-    if (hasFlag(flags, Flag.VisibleMod)) return LegacyRank.Moderator;
-    if (hasFlag(flags, Flag.VisibleUser)) return LegacyRank.Registered;
+export function isImmune(to: number, target: number): boolean {
+    // no one is immune to wheels except the system
+    if (hasCap(to, Cap.Wheel)) return false;
+    // if the target possesses a cap the source doesnt, they are immune
+    return (to & target) !== to;
+}
+
+export function getLegacyRank(caps: number): LegacyRank {
+    if (hasCap(caps, Cap.VisibleAdmin)) return LegacyRank.Administrator;
+    if (hasCap(caps, Cap.VisibleDev)) return LegacyRank.Developer;
+    if (hasCap(caps, Cap.VisibleMod)) return LegacyRank.Moderator;
+    if (hasCap(caps, Cap.VisibleUser)) return LegacyRank.Registered;
     return LegacyRank.Anonymous;
 }

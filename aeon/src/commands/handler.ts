@@ -1,4 +1,4 @@
-import { Flag, hasFlag } from "../auth";
+import { Cap, hasCap } from "../auth";
 import type { ChannelController } from "../controller";
 import type { ClientContext, EventGateway } from "../core";
 
@@ -72,7 +72,7 @@ interface CommandDefinition {
     stealth?: boolean;
     minargs?: number;
     maxargs?: number;
-    minperms?: Flag;
+    minperms?: Cap;
 }
 
 export interface CommandDefinitionStrict extends CommandDefinition {
@@ -84,7 +84,7 @@ export interface CommandDefinitionStrict extends CommandDefinition {
     stealth: boolean;
     minargs: number;
     maxargs: number;
-    minperms: Flag;
+    minperms: Cap;
 }
 
 const PREFIX = "/";
@@ -109,7 +109,7 @@ export class CommandManager {
                 }
                 const data = this.commands[command];
 
-                if (!hasFlag(client.mask, data.minperms)) {
+                if (!hasCap(client.caps, data.minperms)) {
                     // stealth commands just return immediately without an error
                     if (data.stealth) {
                         return;
@@ -205,7 +205,7 @@ export class CommandManager {
             stealth: false,
             minargs: 0,
             maxargs: 0,
-            minperms: Flag.None
+            minperms: Cap.None
         }, data, { minargs, maxargs });
         this.commands[name] = cmddata;
         for (const alias of cmddata.alias) {

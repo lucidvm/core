@@ -1,14 +1,15 @@
-import { AuthDriver, ClientIdentity, Flag } from "./base";
+import { AuthDriver, ClientIdentity, Cap } from "./base";
 
 const fencepost = new Date();
 
-const user = {
+const user: ClientIdentity = {
     strategy: "legacy",
     id: "user",
-    flags: Flag.Registered | Flag.VisibleUser,
+    caps: Cap.Registered | Cap.VisibleUser,
     fencepost
 };
 
+// implements password-only auth as used in collabvm 1.2
 export class SimplePasswordDriver implements AuthDriver {
 
     readonly id = "legacy";

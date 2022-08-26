@@ -1,6 +1,6 @@
 import { Entity, Column, OneToMany, PrimaryColumn } from "typeorm";
 
-import { Flag } from "../../auth";
+import { Cap } from "../../auth";
 
 import { User } from "./user";
 
@@ -11,9 +11,9 @@ export class Group {
     @PrimaryColumn()
     name: string;
 
-    // additive permission mask for group
-    @Column({ default: Flag.None })
-    mask: number;
+    // additive caps for group
+    @Column({ default: Cap.None })
+    caps: number;
 
     // group members
     @OneToMany(() => User, user => user.group)
