@@ -5,7 +5,7 @@ import jpg from "@julusian/jpeg-turbo";
 
 import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/shared";
 
-import { Cap, hasCap } from "../auth";
+import { AuthCap, hasCap } from "../auth";
 import type { ClientContext, EventGateway } from "../core";
 
 import { ChannelController } from "./base";
@@ -74,7 +74,7 @@ export abstract class BaseMachine extends ChannelController {
     private voteAyes: ClientContext[] = [];
     private voteNays: ClientContext[] = [];
 
-    private lastUpload: { [k: string]: number; } = {};
+    private lastUpload: Map<string, number> = new Map();
     
     protected lastWidth: number = 800;
     protected lastHeight: number = 600;
@@ -165,12 +165,12 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     override canUse(ctx: ClientContext) {
-        const pblocked = this.options.protected && !hasCap(ctx.caps, Cap.SeeProtected);
-        const iblocked = this.options.internal && !hasCap(ctx.caps, Cap.SeeInternal);
+        const pblocked = this.options.protected && !hasCap(ctx.authcaps, AuthCap.SeeProtected);
+        const iblocked = this.options.internal && !hasCap(ctx.authcaps, AuthCap.SeeInternal);
         return !(pblocked || iblocked);
     }
     canTakeTurn(ctx: ClientContext) {
-        return this.canUse(ctx) && (hasCap(ctx.caps, Cap.TurnOverride) || this.options.canTurn);
+        return this.canUse(ctx) && (hasCap(ctx.authcaps, AuthCap.TurnOverride) || this.options.canTurn);
     }
     canPlaceVote(ctx: ClientContext) {
         // it doesnt make much sense to have a "vote override" permission
@@ -178,7 +178,7 @@ export abstract class BaseMachine extends ChannelController {
     }
     canUploadFile(ctx: ClientContext) {
         // TODO: factor in whether the backend actually supports uploads
-        return this.canUse(ctx) && (hasCap(ctx.caps, Cap.UploadOverride) || this.options.canUpload);
+        return this.canUse(ctx) && (hasCap(ctx.authcaps, AuthCap.UploadOverride) || this.options.canUpload);
     }
 
     // periodic routine
@@ -463,9 +463,9 @@ export abstract class BaseMachine extends ChannelController {
         }
 
         // ugly way of giving some time for automated handshaking
-        if (this.gw.authMandate && !hasCap(ctx.caps, Cap.Registered)) {
+        if (this.gw.authMandate && !hasCap(ctx.authcaps, AuthCap.Registered)) {
             setTimeout(() => {
-                if (!hasCap(ctx.caps, Cap.Registered)) {
+                if (!hasCap(ctx.authcaps, AuthCap.Registered)) {
                     ctx.announce("Authentication is mandatory on this instance. Please log in.");    
                 }
             }, 250);

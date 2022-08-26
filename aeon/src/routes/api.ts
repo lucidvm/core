@@ -1,11 +1,11 @@
 import express, { Response } from "express";
 
-import { ClientIdentity, Cap, hasCap, LocalDriver } from "../auth";
+import { ClientIdentity, AuthCap, hasCap, LocalDriver } from "../auth";
 import type { EventGateway } from "../core";
 import type { ConfigKey } from "../db";
 import type { ConfigManager, MachineManager } from "../manager";
 
-function checkCap(res: Response, cap: Cap): boolean {
+function checkCap(res: Response, cap: AuthCap): boolean {
     if (!hasCap(res.locals.identity.caps, cap)) {
         res.status(403);
         res.send({ error: "unauthorized" });
@@ -27,7 +27,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
         if (token == null) { err(); return; }
         res.locals.token = token;
         const identity = await gw.auth.validateToken(token);
-        if (identity == null || identity.strategy !== "local" || !hasCap(identity.caps, Cap.API)) { err(); return; }
+        if (identity == null || identity.strategy !== "local" || !hasCap(identity.caps, AuthCap.API)) { err(); return; }
         res.locals.identity = identity;
         res.header("Authorization", token);
         next();
@@ -68,13 +68,13 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
 
     // global config
     router.get("/config", (req, res) => {
-        if (checkCap(res, Cap.Config)) return;
+        if (checkCap(res, AuthCap.Config)) return;
         const keys = config.getConfigMetadata();
         res.send(keys);
         res.end();
     });
     router.get("/config/:key", async (req, res) => {
-        if (checkCap(res, Cap.Config)) return;
+        if (checkCap(res, AuthCap.Config)) return;
         if (!config.isValid(req.params.key as ConfigKey)) {
             res.status(404);
             res.send({ error: "invalid config key" });
@@ -88,7 +88,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
         res.end();
     });
     router.post("/config/:key", async (req, res) => {
-        if (checkCap(res, Cap.Config)) return;
+        if (checkCap(res, AuthCap.Config)) return;
         if (!config.isValid(req.params.key as ConfigKey)) {
             res.status(404);
             res.send({ error: "invalid config key" });
@@ -108,13 +108,13 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
 
     // machine config
     router.get("/machines", async (req, res) => {
-        if (checkCap(res, Cap.ManageVMs)) return;
+        if (checkCap(res, AuthCap.ManageVMs)) return;
         const entries = await machines.repo.find();
         res.send(entries);
         res.end();
     });
     router.put("/machines/:channel", async (req, res) => {
-        if (checkCap(res, Cap.ManageVMs)) return;
+        if (checkCap(res, AuthCap.ManageVMs)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info == null) {
             if (
@@ -142,7 +142,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
         res.end();
     });
     router.delete("/machines/:channel", async (req, res) => {
-        if (checkCap(res, Cap.ManageVMs)) return;
+        if (checkCap(res, AuthCap.ManageVMs)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info != null) {
             await machines.destroy(req.params.channel);
@@ -155,7 +155,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
         res.end();
     });
     router.patch("/machines/:channel/config", async (req, res) => {
-        if (checkCap(res, Cap.ManageRooms)) return;
+        if (checkCap(res, AuthCap.ManageRooms)) return;
         const info = await machines.repo.findOneBy({ channel: req.params.channel });
         if (info != null) {
             await machines.configure(req.params.channel, req.body);
@@ -170,7 +170,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
 
     // user management
     router.get("/users", async (req, res) => {
-        if (checkCap(res, Cap.ManageUsers)) return;
+        if (checkCap(res, AuthCap.ManageUsers)) return;
         const entries = await acl.users.find();
         // sanitize sensitive things out
         res.send(entries.map(x => ({
@@ -183,7 +183,7 @@ export function mountAPI(gw: EventGateway, config: ConfigManager, machines: Mach
 
     // group management
     router.get("/groups", async (req, res) => {
-        if (checkCap(res, Cap.ManageGroups)) return;
+        if (checkCap(res, AuthCap.ManageGroups)) return;
         const entries = await acl.groups.find();
         res.send(entries.map(x => ({
             name: x.name,

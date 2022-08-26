@@ -5,6 +5,7 @@ import {
     EventConduit, GuacConduit, JSONConduit, LECConduit,
     wireprim, wirestr, wirenum, wirebool,
     ensureString, ensureNumber, ensureBoolean, 
+    GatewayCap
 } from "@lucidvm/shared";
 
 import type { ClientContext } from "./client";
@@ -14,6 +15,10 @@ const RENAME_INUSE = 1;
 const RENAME_INVALID = 2;
 const RENAME_BADWORD = 3;
 
+const CAP_ADVERTISE = 0;
+const CAP_USE = 1;
+const CAP_REJECT = 2;
+
 const AUTH_ADVERTISE = 0;
 const AUTH_USE = 1;
 const AUTH_IDENTIFY = 2;
@@ -21,6 +26,11 @@ const AUTH_SESSION = 3;
 const AUTH_REJECT = 4;
 const AUTH_NONSENSE = 5;
 const AUTH_STALE = 6;
+
+const extendCaps: GatewayCap[] = [
+    GatewayCap.Auth,
+    GatewayCap.Instance
+];
 
 export const defaultMethods: {
     [k: string]: ((ctx: ClientContext, ...args: wireprim[]) => void | Promise<void>)
@@ -140,7 +150,7 @@ export const defaultMethods: {
                 }
                 const [identity, token] = await ctx.gw.auth.identify("legacy", data);
                 if (identity != null) {
-                    if (ctx.level >= 1) {
+                    if (ctx.gwcaps[GatewayCap.Auth]) {
                         ctx.send("auth", AUTH_SESSION, token);
                     }
                     ctx.setIdentity(identity);
@@ -151,17 +161,59 @@ export const defaultMethods: {
     },
 
 
-    // lucid-1 extensions
+    // extensions
+
+    cap(ctx, stage: number, ...caps: GatewayCap[]) {
+        stage = ensureNumber(stage);
+        const gwcaps = ctx.gw.getCaps();
+        switch (stage) {
+            case CAP_USE:
+                // reject clients lazily sending back the server's declared caps
+                if (caps.indexOf(GatewayCap.Poison) !== -1) {
+                    ctx.send("cap", CAP_REJECT, "broken caps implementation");
+                    return;
+                }
+                // make sure no invalid caps are included
+                for (const cap of caps) {
+                    if (gwcaps.indexOf(cap) === -1) {
+                        ctx.send("cap", CAP_REJECT, "invalid cap requested");
+                        return;
+                    }
+                }
+                // actually set caps on client
+                for (const cap of caps) {
+                    ctx.gwcaps[cap] = true;
+                }
+                // start upgrade if necessary
+                var next: EventConduit = ctx.conduit;
+                if (ctx.gwcaps[GatewayCap.LECTunnel]) {
+                    next = new LECConduit(Codebooks.CVMP);
+                }
+                else if (ctx.gwcaps[GatewayCap.JSONTunnel]) {
+                    next = new JSONConduit();
+                }
+                // send caps confirm
+                ctx.send("cap", CAP_USE);
+                // switch conduit
+                ctx.conduit = next;
+                break;
+        }
+    },
 
     // declare protocol extension support
+    // DEPRECATED
     extend(ctx, magic: wirestr, level: wirenum) {
         magic = ensureString(magic);
         if (magic != "lucid") return;
         level = ensureNumber(level);
-        ctx.level = level;
+        if (level >= 1) {
+            ctx.gwcaps[GatewayCap.Auth] = true;
+            ctx.gwcaps[GatewayCap.Instance] = true;
+        }
     },
 
     // upgrade to a different event conduit
+    // DEPRECATED
     upgrade(ctx, target: wirestr) {
         var next: EventConduit;
         switch (ensureString(target)) {
@@ -243,8 +295,9 @@ export const defaultMethods: {
     },
 
     // enable or disable sanitizing strings serverside
+    // DEPRECATED
     strip(ctx, enable: boolean) {
-        ctx.strip = ensureBoolean(enable);
+        ctx.gwcaps[GatewayCap.DontSanitize] = ensureBoolean(enable);
         ctx.send("strip", enable);
     },
 

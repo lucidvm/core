@@ -2,7 +2,7 @@ import { Application } from "express";
 
 export class UploadManager {
 
-    private postcbs: { [k: string]: (data: Buffer) => void } = {};
+    private postcbs: Map<string, (data: Buffer) => void> = new Map();
 
     constructor(app: Application) {
         app.post("/upload", (req, res) => {

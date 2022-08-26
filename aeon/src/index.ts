@@ -5,7 +5,7 @@ import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
 import { initDatabase, ConfigKey } from "./db";
 import { EventGateway } from "./core";
 import { ConfigManager, MachineManager } from "./manager";
-import { LocalDriver, SimplePasswordDriver, Cap, AuthManager, InternalDriver } from "./auth";
+import { LocalDriver, SimplePasswordDriver, AuthCap, AuthManager, InternalDriver } from "./auth";
 import { mountWebapp, mountAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
 
@@ -28,7 +28,7 @@ initDatabase().then(async db => {
     if (await acl.users.findOneBy({ username: "root" }) == null) {
         console.log("creating default root account with password nebur123");
         await acl.register("root", "nebur123");
-        await acl.setUserCaps("root", Cap.All);
+        await acl.setUserCaps("root", AuthCap.All);
     }
 
     // instantiate the gateway

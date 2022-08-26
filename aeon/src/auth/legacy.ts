@@ -1,11 +1,11 @@
-import { AuthDriver, ClientIdentity, Cap } from "./base";
+import { AuthDriver, ClientIdentity, AuthCap } from "./base";
 
 const fencepost = new Date();
 
 const user: ClientIdentity = {
     strategy: "legacy",
     id: "user",
-    caps: Cap.Registered | Cap.VisibleUser,
+    caps: AuthCap.Registered | AuthCap.VisibleUser,
     fencepost
 };
 

@@ -1,4 +1,4 @@
-import { AuthDriver, ClientIdentity, Cap } from "./base";
+import { AuthDriver, ClientIdentity, AuthCap } from "./base";
 
 const strategy = "internal";
 const id = "system";
@@ -9,7 +9,7 @@ export class InternalDriver implements AuthDriver {
     readonly id = strategy;
     readonly identity: ClientIdentity = {
         strategy, id,
-        caps: Cap.System,
+        caps: AuthCap.System,
         fencepost: new Date(0)
     }
 

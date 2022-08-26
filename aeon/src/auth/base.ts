@@ -8,7 +8,7 @@ enum LegacyRank {
     Developer
 }
 
-export enum Cap {
+export enum AuthCap {
     // no permissions at all
     None            = 1 << 0,
     // known user
@@ -68,7 +68,7 @@ export enum Cap {
     Wheel           = 1 << 30,
 
     // all special permissions
-    System          = Cap.Register | Cap.ResetPassword,
+    System          = AuthCap.Register | AuthCap.ResetPassword,
     // all user permissions
     All             = ~(~0 << 31) & ~System,
 }
@@ -88,22 +88,22 @@ export interface AuthDriver {
     identify(secret: string): ClientIdentity | Promise<ClientIdentity>;
 }
 
-export function hasCap(caps: number, cap: Cap): boolean {
-    if ((caps & Cap.Wheel) === Cap.Wheel) return true;
+export function hasCap(caps: number, cap: AuthCap): boolean {
+    if ((caps & AuthCap.Wheel) === AuthCap.Wheel) return true;
     return (caps & cap) === cap;
 }
 
 export function isImmune(to: number, target: number): boolean {
     // no one is immune to wheels except the system
-    if (hasCap(to, Cap.Wheel)) return false;
+    if (hasCap(to, AuthCap.Wheel)) return false;
     // if the target possesses a cap the source doesnt, they are immune
     return (to & target) !== to;
 }
 
 export function getLegacyRank(caps: number): LegacyRank {
-    if (hasCap(caps, Cap.VisibleAdmin)) return LegacyRank.Administrator;
-    if (hasCap(caps, Cap.VisibleDev)) return LegacyRank.Developer;
-    if (hasCap(caps, Cap.VisibleMod)) return LegacyRank.Moderator;
-    if (hasCap(caps, Cap.VisibleUser)) return LegacyRank.Registered;
+    if (hasCap(caps, AuthCap.VisibleAdmin)) return LegacyRank.Administrator;
+    if (hasCap(caps, AuthCap.VisibleDev)) return LegacyRank.Developer;
+    if (hasCap(caps, AuthCap.VisibleMod)) return LegacyRank.Moderator;
+    if (hasCap(caps, AuthCap.VisibleUser)) return LegacyRank.Registered;
     return LegacyRank.Anonymous;
 }

@@ -5,18 +5,14 @@ import he from "he";
 import {
     wireblob, wireprim, wirestr,
     ensureString,
-    EventConduit, GuacConduit
+    EventConduit, GuacConduit,
+    GatewayCap
 } from "@lucidvm/shared";
 
-import { ClientIdentity, Cap, getLegacyRank, hasCap } from "../auth";
+import { ClientIdentity, AuthCap, getLegacyRank, hasCap } from "../auth";
 
 import type { EventGateway } from "./gateway";
 import { defaultMethods } from "./methods";
-
-export enum ExtensionLevel {
-    Base,
-    V1
-}
 
 const anonpermitted: { [k:string]: boolean } = {
     nop: true,
@@ -29,7 +25,8 @@ const anonpermitted: { [k:string]: boolean } = {
     extend: true,
     upgrade: true,
     auth: true,
-    instance: true
+    instance: true,
+    cap: true
 };
 
 export class ClientContext {
@@ -38,11 +35,10 @@ export class ClientContext {
     readonly gw: EventGateway;
     readonly ip: string;
 
-    level: ExtensionLevel = ExtensionLevel.Base;
-    strip = true;
+    gwcaps: Map<GatewayCap, boolean> = new Map();
 
     strategy: string = "anonymous";
-    caps: number = Cap.None;
+    authcaps: number = AuthCap.None;
 
     nick: string;
     channel: string = null;
@@ -59,7 +55,7 @@ export class ClientContext {
                 const stmts = this.conduit.unpack(x);
                 for (const stmt of stmts) {
                     const opcode = ensureString(stmt.shift());
-                    if (gw.authMandate && !hasCap(this.caps, Cap.Registered) && !anonpermitted[opcode]) {
+                    if (gw.authMandate && !hasCap(this.authcaps, AuthCap.Registered) && !anonpermitted[opcode]) {
                         console.warn("rejected opcode " + opcode + " from unauthenticated user");
                         return;
                     }
@@ -84,11 +80,12 @@ export class ClientContext {
             }
         });
 
-        this.send("extend", "lucid", ExtensionLevel.V1);
+        this.send("cap", 0, ...this.gw.getCaps());
+        this.send("extend", "lucid", 1);
     }
 
     sanitize(str: string): string {
-        if (!this.strip) return str;
+        if (this.gwcaps[GatewayCap.DontSanitize]) return str;
         return he.escape(str);
     }
 
@@ -98,7 +95,7 @@ export class ClientContext {
     }
 
     setIdentity(identity: ClientIdentity) {
-        this.caps = identity.caps;
+        this.authcaps = identity.caps;
         if (this.channel != null) {
             this.gw.announcePeer(this);
             this.gw.getController(this.channel)?.notifyIdentify(this);
@@ -130,8 +127,8 @@ export class ClientContext {
     }
 
     sendPeers(peers: ClientContext[], leaving = false) {
-        var data: [string, number?][] = peers.map(x => leaving ? [x.nick] : [x.nick, getLegacyRank(x.caps)]);
-        if (this.strip) data.map(x => x[0] = this.sanitize(x[0]));
+        var data: [string, number?][] = peers.map(x => leaving ? [x.nick] : [x.nick, getLegacyRank(x.authcaps)]);
+        if (!this.gwcaps[GatewayCap.DontSanitize]) data.map(x => x[0] = this.sanitize(x[0]));
         this.send(leaving ? "remuser" : "adduser", peers.length, ...data.flat());
     }
 

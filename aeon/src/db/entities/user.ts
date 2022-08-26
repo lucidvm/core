@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, PrimaryColumn } from "typeorm";
 
-import { Cap } from "../../auth";
+import { AuthCap } from "../../auth";
 
 import { Group } from "./group";
 
@@ -20,7 +20,7 @@ export class User {
     fencepost: Date;
 
     // base caps for user
-    @Column({ default: Cap.Registered | Cap.VisibleUser })
+    @Column({ default: AuthCap.Registered | AuthCap.VisibleUser })
     caps: number;
 
     // the user's group

@@ -1,6 +1,6 @@
 import { Entity, Column, OneToMany, PrimaryColumn } from "typeorm";
 
-import { Cap } from "../../auth";
+import { AuthCap } from "../../auth";
 
 import { User } from "./user";
 
@@ -12,7 +12,7 @@ export class Group {
     name: string;
 
     // additive caps for group
-    @Column({ default: Cap.None })
+    @Column({ default: AuthCap.None })
     caps: number;
 
     // group members

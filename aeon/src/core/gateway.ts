@@ -2,7 +2,7 @@ import express from "express";
 import exprws, { Application, Instance } from "express-ws";
 import bodyparser from "body-parser";
 
-import type { wireprim } from "@lucidvm/shared";
+import { wireprim, GatewayCap } from "@lucidvm/shared";
 
 import type { ChannelController } from "../controller";
 import { AuthManager } from "../auth";
@@ -28,8 +28,8 @@ export class EventGateway {
         contact: "N/A"
     };
 
-    private clients: { [k: number]: ClientContext } = {};
-    private controllers: { [k: string]: ChannelController } = {};
+    private clients: Map<number, ClientContext> = new Map();
+    private controllers: Map<string, ChannelController> = new Map();
     private nextid: number = 0;
 
     readonly commands: CommandManager = new CommandManager();
@@ -64,6 +64,19 @@ export class EventGateway {
                 this.clients[id].sendPing();
             }
         }, 15 * 1000);
+    }
+
+    getCaps(): GatewayCap[] {
+        return [
+            GatewayCap.JSONTunnel,
+            GatewayCap.LECTunnel,
+            GatewayCap.Auth,
+            GatewayCap.LegacyAuth,
+            GatewayCap.LocalAuth,
+            GatewayCap.Instance,
+            GatewayCap.DontSanitize,
+            GatewayCap.Poison
+        ];
     }
 
     registerController(controller: ChannelController) {

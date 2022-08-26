@@ -1,5 +1,5 @@
 import type { QEMUOptions } from "@lucidvm/virtue";
-import { Cap } from "../auth";
+import { AuthCap } from "../auth";
 
 import { BaseMachine, LocalMachine } from "../controller";
 import type { MachineManager } from "../manager";
@@ -9,7 +9,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
     handler.register({
         name: "snapshot",
         description: "Takes a snapshot of the machine's current state and sets it as the rollback target.",
-        minperms: Cap.Snapshot,
+        minperms: AuthCap.Snapshot,
         async method(ctx) {
             if (ctx.room instanceof LocalMachine) {
                 const name = "manual-" + Date.now();
@@ -25,7 +25,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
     handler.register({
         name: "reset",
         description: "Resets the machine immediately without a vote.",
-        minperms: Cap.Reset,
+        minperms: AuthCap.Reset,
         async method(ctx) {
             if (ctx.room instanceof BaseMachine) {
                 ctx.room.reset();

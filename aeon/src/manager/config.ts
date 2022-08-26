@@ -89,7 +89,7 @@ const options: Record<ConfigKey, OptionMetadata> = {
 
 export class ConfigManager extends EventEmitter {
 
-    private readonly cache: { [key: string]: string; } = {};
+    private readonly cache: Map<string, string> = new Map();
 
     readonly repo: Repository<ConfigOption>;
 

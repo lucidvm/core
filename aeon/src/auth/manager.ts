@@ -5,7 +5,7 @@ import { wireprim } from "@lucidvm/shared";
 
 import { Revocation } from "../db";
 
-import { AuthDriver, ClientIdentity, Cap } from "./base";
+import { AuthDriver, ClientIdentity, AuthCap } from "./base";
 import { XBTCodec } from "./xbt";
 
 function genID(): string { return simpleflake().toString(36); }
@@ -17,7 +17,7 @@ interface ClientClaims extends ClientIdentity {
 
 export class AuthManager {
 
-    private drivers: { [k: string]: AuthDriver } = {};
+    private drivers: Map<string, AuthDriver> = new Map();
 
     // tid, driver, uid, caps
     private readonly xbt: XBTCodec<[string, string, string | number, number]>;
@@ -72,7 +72,7 @@ export class AuthManager {
         // get the issue date
         const issued = this.xbt.getDate(tok);
         if (issued == null) return null;
-        
+
         // read the claims
         const [tid, strategy, id, caps] = this.xbt.getClaims(tok);
         // validate types, make sure the driver is valid
@@ -102,7 +102,7 @@ export class AuthManager {
         };
     }
 
-    async issue(identity: ClientIdentity, caps: number = Cap.All) {
+    async issue(identity: ClientIdentity, caps: number = AuthCap.All) {
         return this.xbt.issue(genID(),
             identity.strategy, identity.id, identity.caps & caps);
     }

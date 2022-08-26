@@ -3,14 +3,14 @@ import { hash, compare } from "bcrypt";
 
 import { User, Group } from "../db";
 
-import { AuthDriver, ClientIdentity, Cap } from "./base";
+import { AuthDriver, ClientIdentity, AuthCap } from "./base";
 
 const strategy = "local";
 
 function deriveBits(user: User): number {
     // apply group permissions
     // also strip erroneously applied system perms
-    return (user.caps | user.group.caps) & ~Cap.System;
+    return (user.caps | user.group.caps) & ~AuthCap.System;
 }
 
 function deriveIdentity(user: User): ClientIdentity {
