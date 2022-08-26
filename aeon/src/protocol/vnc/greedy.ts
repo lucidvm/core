@@ -1,3 +1,19 @@
+// the problem:
+//  - certain implementations of rfb/vnc are incredibly spammy with updates
+//  - qemu in particular is terrible about flooding very small updates quickly
+//  - guac tunneling amplifies this problem in both processing and bandwidth
+//
+// the criteria:
+//  - the length of the final set should be <= that of the initial one
+//  - final > initial in terms of total area is a valid tradeoff, as less rects
+//    still means less processing/network overhead even if the actual area is
+//    a bit larger
+//
+// the solution:
+//  1. create a tiled dirty map from the rectangles
+//  2. greedily combine the tiles back into tile-quantized rectangles
+//  3. dequantize the resulting rectangles
+
 export interface Rect {
     x: number;
     y: number;
@@ -5,19 +21,20 @@ export interface Rect {
     height: number;
 }
 
+// checks if all tiles in a horizontal run of tiles are clean
 function scan(map: boolean[], x: number, width: number) {
     width += x;
     for (; x < width; x++) if (!map[x]) return false;
     return true;
 }
 
-export function optimize(rects: Rect[], fbw: number, fbh: number, factor = 16): Rect[] {
-    // get quantized fb size
+export function greedy(rects: Rect[], fbw: number, fbh: number, factor = 16): Rect[] {
+    // quantize the framebuffer size to a multiple of the tile size
     const qw = Math.ceil(fbw / factor);
     const qh = Math.ceil(fbh / factor);
 
-    // build tile mask
-    const qmap: boolean[] = new Array(qw * qh);
+    // build the tile dirty map
+    const tiles: boolean[] = new Array(qw * qh);
     for (const rect of rects) {
         const x = Math.floor(rect.x / factor);
         const y = Math.floor(rect.y / factor);
@@ -26,33 +43,46 @@ export function optimize(rects: Rect[], fbw: number, fbh: number, factor = 16): 
         for (var i = 0; i <= h; i++) {
             for (var j = 0; j <= w; j++) {
                 const bi = (y + i) * qw + x + j;
-                qmap[bi] = true;
+                tiles[bi] = true;
             }
         }
     }
 
     // crawl the mask and combine tiles into chunks
+    // conceptually a variant of a greedy meshing algorithm
     const qrects: Rect[] = [];
-    const rows: number[] = new Array(qw * qh);
+    // runs map, used to skip tiles already belonging to a rect
+    const runs: number[] = new Array(qw * qh);
+    // 1. search for dirty tiles
     for (var y = 0; y < qh; y++) {
         const base = y * qw;
         for (var x = 0; x < qw; x++) {
-            // skip unused tiles
-            if (!qmap[base + x]) continue;
-            // also skip if we've already found a rect here
-            var row = rows[base + x];
-            if (row != null) { x += row - 1; continue; }
-            // find the chunk width
-            const sx = x;
-            for (; x < qw && qmap[base + x]; x++);
-            const width = x - sx;
-            rows[base + sx] = width;
-            // find the chunk height
-            const bs = base + sx;
+            // skip clean tiles
+            if (!tiles[base + x]) continue;
+            // skip if we've already found a rect here
+            const run = runs[base + x];
+            if (run != null) { x += run - 1; continue; }
+
+            // 2. we've found a relevant dirty tile
+            // let's find the chunk width
+            // crawl to the right until we hit a clean tile
+            const x1 = x;
+            for (; x < qw && tiles[base + x]; x++);
+            const width = x - x1;
+
+            // 3. we now know the width of the chunk
+            // now find the chunk height
+            // crawl downward until we hit a clean tile
+            //
+            // record the rect width at (x1,y1+h) in the runs map as we crawl
+            // step 1 can use this data to skip over known tiles
+            const scanbase = base + x1;
+            runs[scanbase] = width;
             var height = 0;
-            while (scan(qmap, bs + ++height * qw, width)) rows[bs + height * qw] = width;
-            // push the rect
-            qrects.push({ x: sx, y, width, height });
+            while (scan(tiles, scanbase + ++height * qw, width)) runs[scanbase + height * qw] = width;
+
+            // 4. finally, store the rectangle and return to step 1
+            qrects.push({ x: x1, y, width, height });
         }
     }
     

@@ -1,6 +1,7 @@
 import { Canvas, Image, ImageData } from "canvas";
 import he from "he";
 import { v4 } from "uuid";
+import jpg from "@julusian/jpeg-turbo";
 
 import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/shared";
 
@@ -360,12 +361,20 @@ export abstract class BaseMachine extends ChannelController {
         this.broadcast("size", LAYER_FB, width, height);
     }
 
-    protected rect(x: number, y: number, data: Buffer) {
-        this.broadcast("png", 14, LAYER_FB, x, y, data);
+    // compress image data
+    protected compress(width: number, height: number, data: WithImplicitCoercion<ArrayBuffer>, quality = 65): Buffer {
+        return jpg.compressSync(Buffer.from(data), {
+            format: jpg.FORMAT_RGBA,
+            width: width,
+            height: height,
+            subsampling: jpg.SAMP_420,
+            quality
+        });
     }
 
-    protected copy(x: number, y: number, w: number, h: number, dx: number, dy: number) {
-        this.broadcast("copy", LAYER_FB, x, y, w, h, 14, dx, dy);
+    // draw a rect update
+    protected rect(x: number, y: number, data: Buffer) {
+        this.broadcast("png", 14, LAYER_FB, x, y, data);
     }
 
     protected setCursor(hx: number, hy: number,

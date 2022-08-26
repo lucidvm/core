@@ -1,7 +1,6 @@
 import { URL } from "url";
 
 import { Canvas, CanvasRenderingContext2D } from "canvas";
-import jpg from "@julusian/jpeg-turbo";
 
 import { ensureString } from "@lucidvm/shared";
 
@@ -66,15 +65,7 @@ export class RemoteMachine extends BaseMachine {
             this.thumbdraw = this.thumbcanvas.getContext("2d");
             this.resize(w, h);
         });
-        adapter.onRect((x, y, fb) => {
-            const encoded = jpg.compressSync(Buffer.from(fb.data), {
-                format: jpg.FORMAT_RGBA,
-                width: fb.width,
-                height: fb.height,
-                quality: 65
-            });
-            this.rect(x, y, encoded);
-        });
+        adapter.onRect((x, y, fb) => this.rect(x, y, this.compress(fb.width, fb.height, fb.data)));
         adapter.onSync(() => this.sync());
         adapter.onCursor((x, y, fb) => this.setCursor(x, y, fb.width, fb.height, fb.data));
         this.adapter = adapter;
@@ -88,20 +79,12 @@ export class RemoteMachine extends BaseMachine {
         const nh = (400 * this.thumbcanvas.height) / this.thumbcanvas.width;
         const img = this.adapter.getFrameBufferImage();
         this.thumbdraw.drawImage(img, 0, 0, img.width, img.height, 0, 0, 400, nh);
-        return jpg.compressSync(Buffer.from(this.thumbdraw.getImageData(0, 0, 400, nh).data), {
-            format: jpg.FORMAT_RGBA,
-            width: 400,
-            height: nh
-        });
+        return this.compress(400, nh, this.thumbdraw.getImageData(0, 0, 400, nh).data);
     }
 
     override getFrameBuffer(): Buffer {
         const fb = this.adapter.getFrameBuffer();
-        return jpg.compressSync(Buffer.from(fb.data), {
-            format: jpg.FORMAT_RGBA,
-            width: fb.width,
-            height: fb.height
-        });
+        return this.compress(fb.width, fb.height, fb.data);
     }
 
     protected override doReset() {
