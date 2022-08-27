@@ -15,10 +15,13 @@ import {
 
 import { ClientIdentity, AuthCap, getLegacyRank, hasCap } from "../auth";
 
-import type { EventGateway } from "./gateway";
-import { defaultMethods } from "./methods";
+import type { EventGateway } from "./index";
 
-const anonpermitted: { [k:string]: boolean } = {
+export interface DispatchTable {
+    [k: string]: ((ctx: ClientContext, ...args: wireprim[]) => void | Promise<void>);
+}
+
+const anonpermitted: Record<string, boolean> = {
     nop: true,
     connect: true,
     disconnect: true,
@@ -39,7 +42,7 @@ export class ClientContext {
     readonly gw: EventGateway;
     readonly ip: string;
 
-    gwcaps: Map<GatewayCap, boolean> = new Map();
+    gwcaps: Map<string, boolean> = new Map();
 
     strategy: string = "anonymous";
     authcaps: number = AuthCap.None;
@@ -48,6 +51,8 @@ export class ClientContext {
     channel: string = null;
 
     conduit: EventConduit = new GuacConduit();
+
+    private dispatch: DispatchTable = { };
 
     constructor(gw: EventGateway, req: Request, ws: WebSocket) {
         this.gw = gw;
@@ -63,8 +68,8 @@ export class ClientContext {
                         console.warn("rejected opcode " + opcode + " from unauthenticated user");
                         return;
                     }
-                    if (opcode in defaultMethods) {
-                        await defaultMethods[opcode](this, ...stmt);
+                    if (opcode in this.dispatch) {
+                        await this.dispatch[opcode](this, ...stmt);
                     }
                     else {
                         await gw.getController(this.channel)?.interpret(this, opcode, ...stmt);
@@ -80,12 +85,15 @@ export class ClientContext {
         ws.on("close", () => {
             if (this.channel != null) {
                 // XXX: kind of ugly!
-                defaultMethods["disconnect"](this, true);
+                this.dispatch["disconnect"](this, true);
             }
         });
 
         this.send("cap", 0, ...this.gw.getCaps());
-        this.send("extend", "lucid", 1);
+    }
+
+    loadDispatchTable(table: DispatchTable) {
+        Object.assign(this.dispatch, table);
     }
 
     sanitize(str: string): string {

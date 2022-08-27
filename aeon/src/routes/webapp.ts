@@ -6,7 +6,7 @@ import path from "path";
 
 import express from "express";
 
-import { EventGateway } from "../core";
+import { EventGateway } from "../gateway";
 
 export function mountWebapp(gw: EventGateway) {
     const wabase = path.resolve(__dirname, "../../../flashback");

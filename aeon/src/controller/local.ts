@@ -8,7 +8,7 @@ import { Canvas, CanvasRenderingContext2D } from "canvas";
 
 import { QEMUMonitor, QEMUOptions } from "@lucidvm/virtue";
 
-import type { EventGateway } from "../core";
+import type { EventGateway } from "../gateway";
 
 import { BaseMachine } from "./machine";
 import { VNCAdapter } from "../protocol";

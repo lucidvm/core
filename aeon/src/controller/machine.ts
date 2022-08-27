@@ -10,7 +10,7 @@ import jpg from "@julusian/jpeg-turbo";
 import { ensureBoolean, ensureNumber, ensureString, wireprim } from "@lucidvm/shared";
 
 import { AuthCap, hasCap } from "../auth";
-import type { ClientContext, EventGateway } from "../core";
+import type { ClientContext, EventGateway } from "../gateway";
 
 import { ChannelController } from "./base";
 

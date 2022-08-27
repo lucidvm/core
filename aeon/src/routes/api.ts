@@ -5,7 +5,7 @@
 import express, { Response } from "express";
 
 import { ClientIdentity, AuthCap, hasCap, LocalDriver } from "../auth";
-import type { EventGateway } from "../core";
+import type { EventGateway } from "../gateway";
 import type { ConfigKey } from "../db";
 import type { ConfigManager, MachineManager } from "../manager";
 

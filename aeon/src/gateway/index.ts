@@ -2,6 +2,7 @@
 // Copyright (C) 2022 dither
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { DataSource } from "typeorm";
 import express from "express";
 import exprws, { Application, Instance } from "express-ws";
 import bodyparser from "body-parser";
@@ -13,12 +14,20 @@ import { AuthManager } from "../auth";
 import { UploadManager } from "../routes";
 import { CommandManager } from "../commands";
 
-import { ClientContext } from "./client";
+import { ClientContext, DispatchTable } from "./client";
+import { baseMethods, capTables } from "./methods";
 
 export interface InstanceInfo {
     name: string;
     sysop: string;
     contact: string;
+}
+
+const privateCaps: string[] = [];
+
+export function registerPrivateExtension(cap: string, table: DispatchTable) {
+    privateCaps.push(cap);
+    capTables[cap] = table;
 }
 
 export class EventGateway {
@@ -54,6 +63,7 @@ export class EventGateway {
         this.express.ws("/", (ws, req) => {
             const id = this.nextid++;
             const ctx = new ClientContext(this, req, ws);
+            ctx.loadDispatchTable(baseMethods);
             this.clients[id] = ctx;
             ws.on("close", () => delete this.clients[id])
         });
@@ -70,8 +80,8 @@ export class EventGateway {
         }, 15 * 1000);
     }
 
-    getCaps(): GatewayCap[] {
-        return [
+    getCaps(): string[] {
+        const base: string[] = [
             GatewayCap.JSONTunnel,
             GatewayCap.LECTunnel,
             GatewayCap.Auth,
@@ -81,6 +91,7 @@ export class EventGateway {
             GatewayCap.DontSanitize,
             GatewayCap.Poison
         ];
+        return base.concat(privateCaps);
     }
 
     registerController(controller: ChannelController) {
@@ -164,3 +175,5 @@ export class EventGateway {
     }
 
 }
+
+export * from "./client";

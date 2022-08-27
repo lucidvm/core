@@ -6,13 +6,13 @@ import he from "he";
 
 import {
     Codebooks,
-    EventConduit, GuacConduit, JSONConduit, LECConduit,
-    wireprim, wirestr, wirenum, wirebool,
-    ensureString, ensureNumber, ensureBoolean, 
+    EventConduit, JSONConduit, LECConduit,
+    wirestr, wirenum, wirebool,
+    ensureString, ensureNumber,
     GatewayCap
 } from "@lucidvm/shared";
 
-import type { ClientContext } from "./client";
+import type { DispatchTable } from "./client";
 
 const RENAME_OK = 0;
 const RENAME_INUSE = 1;
@@ -31,16 +31,70 @@ const AUTH_REJECT = 4;
 const AUTH_NONSENSE = 5;
 const AUTH_STALE = 6;
 
-const extendCaps: GatewayCap[] = [
-    GatewayCap.Auth,
-    GatewayCap.Instance
-];
+export const capTables: Record<string, DispatchTable> = {
+    [GatewayCap.LECTunnel]: {
+        codebook(ctx) {
+            if (ctx.conduit instanceof LECConduit) {
+                ctx.send("codebook", ...ctx.conduit.dumpCodebook());
+            }
+            else {
+                // send an empty codebook if we arent using LEC
+                ctx.send("codebook");
+            }
+        }
+    },
+    [GatewayCap.Auth]: {
+        async auth(ctx, stage: wirenum, data: wirestr) {
+            stage = ensureNumber(stage);
+            switch (stage) {
+                case AUTH_ADVERTISE:
+                    ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate,
+                        ...ctx.gw.auth.getStrategies().filter(x => x !== "internal"));
+                    break;
+                case AUTH_USE: {
+                    const info = ctx.gw.auth.use(data);
+                    if (info == null) {
+                        ctx.send("auth", AUTH_NONSENSE);
+                        return;
+                    }
+                    ctx.strategy = data;
+                    ctx.send("auth", AUTH_USE, data, ...info);
+                    break;
+                }
+                case AUTH_IDENTIFY: {
+                    const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
+                    if (identity == null) {
+                        ctx.send("auth", AUTH_REJECT);
+                        return;
+                    }
+                    ctx.send("auth", AUTH_IDENTIFY);
+                    ctx.send("auth", AUTH_SESSION, token);
+                    ctx.setIdentity(identity);
+                    break;
+                }
+                case AUTH_SESSION: {
+                    const identity = await ctx.gw.auth.validateToken(data);
+                    if (identity == null) {
+                        ctx.send("auth", AUTH_STALE);
+                        return;
+                    }
+                    ctx.send("auth", AUTH_IDENTIFY);
+                    ctx.setIdentity(identity);
+                    break;
+                }
+            }
+        }
+    },
+    [GatewayCap.Instance]: {
+        async instance(ctx) {
+            // software, version, instance name, instance maintainer, instance contact details
+            const info = ctx.gw.instanceInfo;
+            ctx.send("instance", "LucidVM", "DEV", info.name, info.sysop, info.contact);
+        }
+    }
+};
 
-export const defaultMethods: {
-    [k: string]: ((ctx: ClientContext, ...args: wireprim[]) => void | Promise<void>)
-} = {
-
-    // base protocol
+export const baseMethods: DispatchTable = {
 
     nop() { },
 
@@ -164,10 +218,9 @@ export const defaultMethods: {
         // TODO: maybe implement collabvm's other horrifying admin commands
     },
 
+    // lucidvm capability handshake
 
-    // extensions
-
-    cap(ctx, stage: number, ...caps: GatewayCap[]) {
+    cap(ctx, stage: number, ...caps: string[]) {
         stage = ensureNumber(stage);
         const gwcaps = ctx.gw.getCaps();
         switch (stage) {
@@ -186,6 +239,10 @@ export const defaultMethods: {
                 }
                 // actually set caps on client
                 for (const cap of caps) {
+                    // load additional dispatch table entries as needed
+                    if (cap in capTables) {
+                        ctx.loadDispatchTable(capTables[cap]);
+                    }
                     ctx.gwcaps[cap] = true;
                 }
                 // start upgrade if necessary
@@ -202,107 +259,6 @@ export const defaultMethods: {
                 ctx.conduit = next;
                 break;
         }
-    },
-
-    // declare protocol extension support
-    // DEPRECATED
-    extend(ctx, magic: wirestr, level: wirenum) {
-        magic = ensureString(magic);
-        if (magic != "lucid") return;
-        level = ensureNumber(level);
-        if (level >= 1) {
-            ctx.gwcaps[GatewayCap.Auth] = true;
-            ctx.gwcaps[GatewayCap.Instance] = true;
-        }
-    },
-
-    // upgrade to a different event conduit
-    // DEPRECATED
-    upgrade(ctx, target: wirestr) {
-        var next: EventConduit;
-        switch (ensureString(target)) {
-            case "guac":
-                next = new GuacConduit();
-                break;
-            case "json":
-                next = new JSONConduit();
-                break;
-            case "lec":
-                next = new LECConduit(Codebooks.CVMP);
-                break;
-            default:
-                ctx.send("upgrade", false);
-                return;
-        }
-        ctx.send("upgrade", true, target);
-        ctx.conduit = next;
-    },
-
-    // retrieve the LEC codebook for this session
-    codebook(ctx) {
-        if (ctx.conduit instanceof LECConduit) {
-            ctx.send("codebook", ...ctx.conduit.dumpCodebook());
-        }
-        else {
-            // send an empty codebook if we arent using LEC
-            ctx.send("codebook");
-        }
-    },
-
-    // authentication handshake
-    async auth(ctx, stage: wirenum, data: wirestr) {
-        stage = ensureNumber(stage);
-        switch (stage) {
-            case AUTH_ADVERTISE:
-                ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate,
-                    ...ctx.gw.auth.getStrategies().filter(x => x !== "internal"));
-                break;
-            case AUTH_USE: {
-                const info = ctx.gw.auth.use(data);
-                if (info == null) {
-                    ctx.send("auth", AUTH_NONSENSE);
-                    return;
-                }
-                ctx.strategy = data;
-                ctx.send("auth", AUTH_USE, data, ...info);
-                break;
-            }
-            case AUTH_IDENTIFY: {
-                const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
-                if (identity == null) {
-                    ctx.send("auth", AUTH_REJECT);
-                    return;
-                }
-                ctx.send("auth", AUTH_IDENTIFY);
-                ctx.send("auth", AUTH_SESSION, token);
-                ctx.setIdentity(identity);
-                break;
-            }
-            case AUTH_SESSION: {
-                const identity = await ctx.gw.auth.validateToken(data);
-                if (identity == null) {
-                    ctx.send("auth", AUTH_STALE);
-                    return;
-                }
-                ctx.send("auth", AUTH_IDENTIFY);
-                ctx.setIdentity(identity);
-                break;
-            }
-        }
-    },
-
-    // retrieve information about this instance
-    async instance(ctx) {
-        // software, version, instance name, instance maintainer, instance contact details
-        const info = ctx.gw.instanceInfo;
-        ctx.send("instance", "LucidVM", "DEV", info.name, info.sysop, info.contact);
-    },
-
-    // enable or disable sanitizing strings serverside
-    // DEPRECATED
-    strip(ctx, enable: boolean) {
-        ctx.gwcaps[GatewayCap.DontSanitize] = ensureBoolean(enable);
-        ctx.send("strip", enable);
-    },
+    }
 
 };

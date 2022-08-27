@@ -6,7 +6,7 @@ import { EventEmitter } from "events";
 
 import type { wireprim } from "@lucidvm/shared";
 
-import type { ClientContext, EventGateway } from "../core";
+import type { ClientContext, EventGateway } from "../gateway";
 
 export abstract class ChannelController extends EventEmitter {
 

@@ -10,7 +10,7 @@ import { DataSource, Repository } from "typeorm";
 import { QEMUOptions } from "@lucidvm/virtue";
 
 import { BaseMachine, LocalMachine, MachineConfig, RemoteMachine } from "../controller";
-import { EventGateway } from "../core";
+import { EventGateway } from "../gateway";
 import { Machine } from "../db";
 
 const confkeys: (keyof MachineConfig)[] = [

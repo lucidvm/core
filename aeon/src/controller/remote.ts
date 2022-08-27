@@ -8,7 +8,7 @@ import { Canvas, CanvasRenderingContext2D } from "canvas";
 
 import { ensureString } from "@lucidvm/shared";
 
-import type { EventGateway } from "../core";
+import type { EventGateway } from "../gateway";
 
 import { BaseMachine } from "./machine";
 import { ProtocolAdapter, VNCAdapter, LRMPClient } from "../protocol";

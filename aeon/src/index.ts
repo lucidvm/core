@@ -4,10 +4,10 @@
 
 import path from "path";
 
-import { ensureBoolean, ensureNumber } from "@lucidvm/shared";
+import { ensureBoolean, ensureNumber, GatewayCap } from "@lucidvm/shared";
 
-import { initDatabase, ConfigKey } from "./db";
-import { EventGateway } from "./core";
+import { initDatabase, ConfigKey, Quote } from "./db";
+import { EventGateway, registerPrivateExtension } from "./gateway";
 import { ConfigManager, MachineManager } from "./manager";
 import { LocalDriver, SimplePasswordDriver, AuthCap, AuthManager, InternalDriver } from "./auth";
 import { mountWebapp, mountAPI } from "./routes";
@@ -17,6 +17,19 @@ console.log("starting event gateway...!");
 
 // fire up the db
 initDatabase().then(async db => {
+    // register qotd extension
+    const quotes = db.getRepository(Quote);
+    registerPrivateExtension(GatewayCap.QOTD, {
+        async qotd(ctx) {
+            const all = await quotes.find();
+            if (all.length < 1) {
+                ctx.send("qotd", "");
+                return;
+            }
+            ctx.send("qotd", all[Math.floor(Math.random() * all.length)].text);
+        }
+    });
+
     // create managers
     const config = new ConfigManager(db);
     const auth = new AuthManager(db,

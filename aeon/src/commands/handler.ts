@@ -4,7 +4,7 @@
 
 import { AuthCap, hasCap } from "../auth";
 import type { ChannelController } from "../controller";
-import type { ClientContext, EventGateway } from "../core";
+import type { ClientContext, EventGateway } from "../gateway";
 
 export function lex(source: string) {
     const tokens: string[] = [];
