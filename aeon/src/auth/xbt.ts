@@ -7,7 +7,7 @@ import { createHmac } from "crypto";
 import ascii85 from "ascii85";
 const { ZeroMQ } = ascii85;
 
-import { serialize, deserialize } from "@lucidvm/shared";
+import { serialize, deserialize } from "@ygoe/msgpack";
 
 const SEP = "~";
 

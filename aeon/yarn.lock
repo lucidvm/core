@@ -13,8 +13,9 @@
 
 "@lucidvm/shared@https://github.com/lucidvm/shared.git":
   version "0.1.3"
-  resolved "https://github.com/lucidvm/shared.git#883646db1fd291c021b5a8daddb8795ffcf91ec4"
+  resolved "https://github.com/lucidvm/shared.git#f7a2cd44e2ff34af7fd05c4ee56bc0e693a74b67"
   dependencies:
+    "@ygoe/msgpack" "^1.0.3"
     buffer "^6.0.3"
     events "^3.3.0"
     ws "^8.8.1"
@@ -137,6 +138,11 @@
   integrity sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==
   dependencies:
     "@types/node" "*"
+
+"@ygoe/msgpack@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@ygoe/msgpack/-/msgpack-1.0.3.tgz#3889f4c0c2d68b2be83e1f6f4444efab02d6f257"
+  integrity sha512-Sjp0O/sNgOJxTOO1c2Zuu7nsHRIGu2iGPYyhUedKKbcHyUl73jbCaomEFJZHNb/6i94B+ZNZHVnFgpo0ENSXxQ==
 
 abbrev@1:
   version "1.1.1"
@@ -1466,9 +1472,9 @@ type-is@~1.6.18:
     mime-types "~2.1.24"
 
 typeorm@^0.3.7:
-  version "0.3.7"
-  resolved "https://registry.yarnpkg.com/typeorm/-/typeorm-0.3.7.tgz#5776ed5058f0acb75d64723b39ff458d21de64c1"
-  integrity sha512-MsPJeP6Zuwfe64c++l80+VRqpGEGxf0CkztIEnehQ+CMmQPSHjOnFbFxwBuZ2jiLqZTjLk2ZqQdVF0RmvxNF3Q==
+  version "0.3.8"
+  resolved "https://registry.yarnpkg.com/typeorm/-/typeorm-0.3.8.tgz#134ab0736592da5d5ca66d4eb8cea5999e34d5f9"
+  integrity sha512-77PNamypfwieZlhwbUAjMudX2T+5F6JCoNR18RdKenJ5Uu+9gc9AWa1kmz/2hH84MU23lGqPCu8u2lKnlfsN2g==
   dependencies:
     "@sqltools/formatter" "^1.2.2"
     app-root-path "^3.0.0"
