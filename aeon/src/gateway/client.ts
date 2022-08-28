@@ -14,6 +14,7 @@ import {
 } from "@lucidvm/shared";
 
 import { ClientIdentity, AuthCap, getLegacyRank, hasCap } from "../auth";
+import { Logger } from "../logger";
 
 import type { EventGateway } from "./index";
 
@@ -27,6 +28,8 @@ export interface DispatchTable {
 }
 
 export class ClientContext {
+
+    readonly logger: Logger;
 
     readonly ws: WebSocket;
     readonly gw: EventGateway;
@@ -48,7 +51,10 @@ export class ClientContext {
         this.gw = gw;
         this.ws = ws;
         this.guestify();
-        this.ip = req.socket.remoteAddress;
+        const forwarded = req.header("X-Forwarded-For");
+        this.ip = forwarded ?? req.socket.remoteAddress;
+        this.logger = new Logger("client:" + this.ip);
+        this.logger.print("connecting!");
         ws.on("message", async x => {
             try {
                 const stmts = this.conduit.unpack(x);
@@ -61,12 +67,12 @@ export class ClientContext {
                             await data.invoke(this, ...stmt);
                         }
                         else {
-                            console.warn(`rejected base opcode ${opcode} from ${this.ip} (${this.authcaps.toString(2).padStart(32, "0")} vs ${mask.toString(2).padStart(32, "0")})`);
+                            this.logger.warn(`rejected base opcode ${opcode} from ${this.ip} (${this.authcaps.toString(2).padStart(32, "0")} vs ${mask.toString(2).padStart(32, "0")})`);
                         }
                     }
                     else {
                         if (gw.authMandate && !hasCap(this.authcaps, AuthCap.Registered)) {
-                            console.warn(`declining to forward opcode ${opcode} from ${this.ip} to controller (not registered!)`);
+                            this.logger.warn(`declining to forward opcode ${opcode} from ${this.ip} to controller (not registered!)`);
                             return;
                         }
                         await gw.getController(this.channel)?.interpret(this, opcode, ...stmt);
@@ -74,12 +80,14 @@ export class ClientContext {
                 }
             }
             catch (e) {
-                console.error("error processing websocket message");
+                this.logger.error("error processing websocket message");
+                this.logger.error("this is a bug");
                 console.error(x);
                 console.error(e);
             }
         });
         ws.on("close", () => {
+            this.logger.print("disconnecting!");
             if (this.channel != null) {
                 // XXX: kind of ugly!
                 this.dispatch["disconnect"].invoke(this, true);
@@ -104,6 +112,7 @@ export class ClientContext {
     }
 
     setIdentity(identity: ClientIdentity) {
+        this.logger.print(`authenticated as ${identity.strategy}/${identity.id} (${identity.caps.toString(2).padStart(32, "0")})`);
         this.authcaps = identity.caps;
         if (this.channel != null) {
             this.gw.announcePeer(this);

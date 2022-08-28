@@ -30,15 +30,15 @@ export class RemoteMachine extends BaseMachine {
         this.client = new LRMPClient(chan);
         this.client.onCaps(caps => {
             // TODO
-            console.debug("supported caps", caps);
+            this.logger.debug("supported caps", caps);
         });
         this.client.onReject(() => {
-            console.error("monitor rejected the connection");
+            this.logger.error("monitor rejected the connection");
         });
         this.client.onTunnel((proto, details) => {
             switch (proto) {
                 case "vnc":
-                    console.debug("got vnc details from monitor");
+                    this.logger.debug("got vnc details from monitor");
                     const url = new URL(ensureString(details));
                     this.setAdapter(new VNCAdapter(url.hostname, +url.port,
                         url.hash.length > 1 ? url.hash.substring(1) : null));

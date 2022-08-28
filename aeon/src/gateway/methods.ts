@@ -13,8 +13,11 @@ import {
 } from "@lucidvm/shared";
 
 import { AuthCap } from "../auth";
+import { Logger } from "../logger";
 
 import type { DispatchTable, DispatchMethod, DispatchEntry } from "./client";
+
+const logger = new Logger("dispatch:base");
 
 const RENAME_OK = 0;
 const RENAME_INUSE = 1;
@@ -76,6 +79,7 @@ export const capTables: Record<string, DispatchTable> = {
                 case AUTH_IDENTIFY: {
                     const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
                     if (identity == null) {
+                        logger.warn(ctx.ip, "failed to authenticate");
                         ctx.send("auth", AUTH_REJECT);
                         return;
                     }

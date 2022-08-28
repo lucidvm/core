@@ -12,8 +12,11 @@ import { ConfigManager, MachineManager } from "./manager";
 import { LocalDriver, SimplePasswordDriver, AuthCap, AuthManager, InternalDriver } from "./auth";
 import { mountWebapp, mountAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
+import { Logger } from "./logger";
 
-console.log("starting event gateway...!");
+const logger = new Logger("main");
+
+logger.print("starting event gateway...!");
 
 // fire up the db
 initDatabase().then(async db => {
@@ -46,7 +49,7 @@ initDatabase().then(async db => {
 
     // create root user if it doesnt exist
     if (await acl.users.findOneBy({ username: "root" }) == null) {
-        console.log("creating default root account with password nebur123");
+        logger.warn("creating default root account with password nebur123");
         await acl.register("root", "nebur123");
         await acl.setUserCaps("root", AuthCap.All);
     }
@@ -95,5 +98,5 @@ initDatabase().then(async db => {
     const port = ensureNumber(await config.getOption(ConfigKey.ListenPort));
     gw.listen(port, host);
 
-    console.debug("ready!");
+    logger.print("ready!");
 });

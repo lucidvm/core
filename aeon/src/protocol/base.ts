@@ -6,6 +6,8 @@ import { EventEmitter } from "events";
 
 import type { Canvas, Image } from "canvas";
 
+import { Logger } from "../logger";
+
 export interface FramebufferData {
     width: number;
     height: number;
@@ -13,6 +15,13 @@ export interface FramebufferData {
 }
 
 export abstract class ProtocolAdapter extends EventEmitter {
+
+    protected readonly logger: Logger;
+
+    constructor(name: string) {
+        super();
+        this.logger = new Logger("protocol");
+    }
 
     abstract connect(): void;
     abstract disconnect(): void;

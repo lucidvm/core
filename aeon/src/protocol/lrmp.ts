@@ -21,7 +21,7 @@ export class LRMPClient extends ProtocolAdapter {
     readonly lec: LECClient = new LECClient(Codebooks.LRMP);
 
     constructor(chan: string) {
-        super();
+        super("lrmp");
 
         const lec = this.lec;
         lec.on("open", () => {

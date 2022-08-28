@@ -136,30 +136,49 @@ export abstract class BaseMachine extends ChannelController {
         });
 
         this.on(MachineEvents.VoteBegin, () => {
+            this.logger.print("a votereset is starting");
             if (this.options.announceVote) {
                 this.announce("A votereset has been initiated.");
             }
         });
         this.on(MachineEvents.VoteSucceed, () => {
+            this.logger.print("the votereset succeeded, resetting...");
             if (this.options.announceVote) {
                 this.announce("Vote passed, resetting...");
             }
         });
         this.on(MachineEvents.VoteFail, () => {
+            this.logger.print("the votereset failed");
             if (this.options.announceVote) {
                 this.announce("The vote did not pass.");
             }
         });
 
         this.on(MachineEvents.VoteCount, (ctx: ClientContext, aye: boolean) => {
+            this.logger.print(`${ctx.nick} (${ctx.ip}) voted ${aye ? "yes" : "no"}`);
             if (this.options.announceVoters) {
                 this.announce(`${ctx.nick} voted ${aye ? "for" : "against"} the reset`);
             }
         });
 
         this.on(MachineEvents.FileUpload, (ctx: ClientContext, filename: string) => {
+            this.logger.print(`${ctx.nick} (${ctx.ip}) uploaded ${filename}`);
             if (this.options.announceUpload) {
                 this.announce(`${ctx.nick} uploaded ${he.encode(filename)}`);
+            }
+        });
+
+        var lastuser: ClientContext = null;
+        this.on(MachineEvents.QueueUpdate, (queue: ClientContext[]) => {
+            if (queue.length === 0) {
+                lastuser = null;
+                this.logger.print("the turn queue is now empty");
+            }
+            else {
+                if (lastuser !== queue[0]) {
+                    lastuser = queue[0];
+                    this.logger.print(`${lastuser.nick} (${lastuser.ip}) now has control of the vm`);
+                }
             }
         });
     }

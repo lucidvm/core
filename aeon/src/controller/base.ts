@@ -7,8 +7,11 @@ import { EventEmitter } from "events";
 import type { wireprim } from "@lucidvm/shared";
 
 import type { ClientContext, EventGateway } from "../gateway";
+import { Logger } from "../logger";
 
 export abstract class ChannelController extends EventEmitter {
+
+    protected readonly logger: Logger;
 
     protected readonly gw: EventGateway;
     readonly channel: string;
@@ -18,6 +21,7 @@ export abstract class ChannelController extends EventEmitter {
         super();
         this.gw = gw;
         this.channel = chan;
+        this.logger = new Logger("controller:" + chan);
     }
 
     broadcast(...args: wireprim[]) {

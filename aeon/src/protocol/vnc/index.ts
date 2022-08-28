@@ -29,7 +29,7 @@ export class VNCAdapter extends ProtocolAdapter {
     private lastcursor: Buffer = null;
 
     constructor(host = "127.0.0.1", port = 5900, password: string = null) {
-        super();
+        super("vnc");
 
         this.vncInfo = { host, port, password, set8BitColor: false };
         this.vnc = new VNCClient({
@@ -47,19 +47,19 @@ export class VNCAdapter extends ProtocolAdapter {
         });
 
         this.vnc.on("connectTimeout", () => {
-            console.warn("vnc timeout");
+            this.logger.warn("vnc timeout");
             this.vncReconnect();
         });
         this.vnc.on("authError", () => {
-            console.error("vnc auth error");
+            this.logger.error("vnc auth error");
             this.vncReconnect();
         });
         this.vnc.on("disconnect", () => {
-            console.warn("vnc disconnect");
+            this.logger.warn("vnc disconnect");
             this.vncReconnect();
         });
         this.vnc.on("closed", () => {
-            console.warn("vnc disconnect");
+            this.logger.warn("vnc disconnect");
             this.vncReconnect();
         });
 
