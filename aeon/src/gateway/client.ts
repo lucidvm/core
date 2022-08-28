@@ -15,6 +15,7 @@ import {
 
 import { ClientIdentity, AuthCap, getLegacyRank, hasCap } from "../auth";
 import { Logger } from "../logger";
+import { ConfigKey } from "../config";
 
 import type { EventGateway } from "./index";
 
@@ -57,12 +58,13 @@ export class ClientContext {
         this.logger.print("connecting!");
         ws.on("message", async x => {
             try {
+                const mustauth = await gw.config.getOptionBool(ConfigKey.AuthMandatory);
                 const stmts = this.conduit.unpack(x);
                 for (const stmt of stmts) {
                     const opcode = ensureString(stmt.shift());
                     if (opcode in this.dispatch) {
                         const data = this.dispatch[opcode];
-                        const mask = data.requires ?? (gw.authMandate ? AuthCap.Registered : AuthCap.None);
+                        const mask = data.requires ?? (mustauth ? AuthCap.Registered : AuthCap.None);
                         if (hasCap(this.authcaps, mask)) {
                             await data.invoke(this, ...stmt);
                         }
@@ -71,7 +73,7 @@ export class ClientContext {
                         }
                     }
                     else {
-                        if (gw.authMandate && !hasCap(this.authcaps, AuthCap.Registered)) {
+                        if (mustauth && !hasCap(this.authcaps, AuthCap.Registered)) {
                             this.logger.warn(`declining to forward opcode ${opcode} from ${this.ip} to controller (not registered!)`);
                             return;
                         }

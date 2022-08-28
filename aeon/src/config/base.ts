@@ -2,14 +2,27 @@
 // Copyright (C) 2022 dither
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import crypto from "crypto";
 import { EventEmitter } from "events";
+import crypto from "crypto";
 
-import { DataSource, Repository } from "typeorm";
+import { ensureBoolean, ensureNumber, wireprim } from "@lucidvm/shared";
 
-import { wireprim, bonk } from "@lucidvm/shared";
+export enum ConfigKey {
+    ListenHost = "gateway.listen.address",
+    ListenPort = "gateway.listen.port",
 
-import { ConfigOption, ConfigKey } from "../db/entities";
+    InstanceName = "gateway.instance.name",
+    InstanceSysop = "gateway.instance.sysop",
+    InstanceContact = "gateway.instance.contact",
+
+    AuthMandatory = "gateway.auth.required",
+    TokenSecret = "gateway.auth.tokenSecret",
+
+    UserPassword = "gateway.auth.legacy.connectPassword",
+
+    MaxSessionsPerIP = "gateway.safety.maxSessionsPerIP",
+    CheckVoteIP = "gateway.safety.checkVoteIP"
+}
 
 interface OptionMetadata {
     // human-friendly category
@@ -88,18 +101,29 @@ const options: Record<ConfigKey, OptionMetadata> = {
         name: "User password",
         description: "Password for simple password-only authentication; blank to disable password-only auth",
         default: "hunter2"
+    },
+    [ConfigKey.MaxSessionsPerIP]: {
+        category: "Safety",
+        name: "Max active sessions",
+        description: "The maximum number of connections that can be opened to a single room, per IP address; set to 0 to allow any number of sessions per IP",
+        type: "number",
+        default: 1
+    },
+    [ConfigKey.CheckVoteIP]: {
+        category: "Safety",
+        name: "Limit votes by IP address",
+        description: "Disable to allow more than one vote per IP address",
+        type: "boolean",
+        default: true
     }
 };
 
-export class ConfigManager extends EventEmitter {
+export abstract class ConfigDriver extends EventEmitter {
 
     private readonly cache: Map<string, string> = new Map();
 
-    readonly repo: Repository<ConfigOption>;
-
-    constructor(readonly db: DataSource) {
+    constructor() {
         super();
-        this.repo = db.getRepository(ConfigOption);
     }
 
     getConfigMetadata(): {
@@ -130,33 +154,31 @@ export class ConfigManager extends EventEmitter {
         return !!options[id].secret;
     }
 
+    protected abstract getOptionImpl(id: ConfigKey): Promise<string> | string;
     async getOption(id: ConfigKey): Promise<string> {
         if (!(id in options)) {
             throw new Error("invalid config key specified");
         }
         if (id in this.cache) return this.cache[id];
-        var val: string;
-        var opt = await this.repo.findOneBy({ id });
-        if (opt == null) {
-            val = await this.setOption(id, options[id].default);
-        }
-        else {
-            val = opt.value;
-        }
-        return val;
+        return await this.getOptionImpl(id) ?? await this.setOption(id, options[id].default)
     }
+    async getOptionBool(id: ConfigKey): Promise<boolean> { return ensureBoolean(await this.getOption(id)); }
+    async getOptionNum(id: ConfigKey): Promise<number> { return ensureNumber(await this.getOption(id)); }
 
+    protected abstract setOptionImpl(id: ConfigKey, value: wireprim): Promise<string> | string;
     async setOption(id: ConfigKey, value: wireprim): Promise<string> {
         if (!(id in options)) {
             throw new Error("invalid config key specified");
         }
-        var opt = new ConfigOption();
-        opt.id = id;
-        opt.value = bonk(value);
-        opt = await this.repo.save(opt);
-        this.cache[id] = opt.value;
+        value = await this.setOptionImpl(id, value);
+        this.cache[id] = value;
         this.emit(id, value);
-        return opt.value;
+        return value;
     }
 
+}
+
+export class DummyConfig extends ConfigDriver {
+    protected override getOptionImpl() { return null; }
+    protected override setOptionImpl() { return null; }
 }

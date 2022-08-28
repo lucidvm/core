@@ -6,9 +6,10 @@ import path from "path";
 
 import { ensureBoolean, ensureNumber, GatewayCap } from "@lucidvm/shared";
 
-import { initDatabase, ConfigKey, Quote } from "./db";
+import { DatabaseConfig, ConfigKey } from "./config";
+import { initDatabase, Quote } from "./db";
 import { EventGateway, registerPrivateExtension } from "./gateway";
-import { ConfigManager, MachineManager } from "./manager";
+import { MachineManager } from "./manager";
 import { LocalDriver, SimplePasswordDriver, AuthCap, AuthManager, InternalDriver } from "./auth";
 import { mountWebapp, mountAPI } from "./routes";
 import { registerAdminCommands } from "./commands";
@@ -37,7 +38,7 @@ initDatabase().then(async db => {
     });
 
     // create managers
-    const config = new ConfigManager(db);
+    const config = new DatabaseConfig(db);
     const auth = new AuthManager(db,
         await config.getOption(ConfigKey.TokenSecret));
 
@@ -55,17 +56,7 @@ initDatabase().then(async db => {
     }
 
     // instantiate the gateway
-    const gw = new EventGateway(auth,
-        ensureBoolean(await config.getOption(ConfigKey.AuthMandatory)));
-    config.on(ConfigKey.AuthMandatory, on => gw.authMandate = ensureBoolean(on));
-
-    // set instance info
-    gw.instanceInfo.name = await config.getOption(ConfigKey.InstanceName);
-    config.on(ConfigKey.InstanceName, name => gw.instanceInfo.name = name);
-    gw.instanceInfo.sysop = await config.getOption(ConfigKey.InstanceSysop);
-    config.on(ConfigKey.InstanceSysop, sysop => gw.instanceInfo.sysop = sysop);
-    gw.instanceInfo.contact = await config.getOption(ConfigKey.InstanceContact);
-    config.on(ConfigKey.InstanceContact, contact => gw.instanceInfo.contact = contact);
+    const gw = new EventGateway(auth, config);
 
     // instantiate machine manager
     const mchmgr = new MachineManager(gw, db, path.join(__dirname, "..", "vms"));

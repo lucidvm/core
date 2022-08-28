@@ -14,6 +14,7 @@ import {
 
 import { AuthCap } from "../auth";
 import { Logger } from "../logger";
+import { ConfigKey } from "../config";
 
 import type { DispatchTable, DispatchMethod, DispatchEntry } from "./client";
 
@@ -63,7 +64,8 @@ export const capTables: Record<string, DispatchTable> = {
             stage = ensureNumber(stage);
             switch (stage) {
                 case AUTH_ADVERTISE:
-                    ctx.send("auth", AUTH_ADVERTISE, ctx.gw.authMandate,
+                    ctx.send("auth", AUTH_ADVERTISE,
+                        await ctx.gw.config.getOptionBool(ConfigKey.AuthMandatory),
                         ...ctx.gw.auth.getStrategies().filter(x => x !== "internal"));
                     break;
                 case AUTH_USE: {
@@ -79,7 +81,7 @@ export const capTables: Record<string, DispatchTable> = {
                 case AUTH_IDENTIFY: {
                     const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
                     if (identity == null) {
-                        logger.warn(ctx.ip, "failed to authenticate");
+                        logger.warn(`${ctx.ip} failed to authenticate`);
                         ctx.send("auth", AUTH_REJECT);
                         return;
                     }
@@ -102,10 +104,12 @@ export const capTables: Record<string, DispatchTable> = {
         })
     },
     [GatewayCap.Instance]: {
-        instance: noauth(ctx => {
+        instance: noauth(async ctx => {
             // software, version, instance name, instance maintainer, instance contact details
-            const info = ctx.gw.instanceInfo;
-            ctx.send("instance", "LucidVM", "DEV", info.name, info.sysop, info.contact);
+            const name = await ctx.gw.config.getOption(ConfigKey.InstanceName);
+            const sysop = await ctx.gw.config.getOption(ConfigKey.InstanceSysop);
+            const contact = await ctx.gw.config.getOption(ConfigKey.InstanceContact);
+            ctx.send("instance", "LucidVM", "DEV", name, sysop, contact);
         })
     }
 };
@@ -114,12 +118,29 @@ export const baseMethods: DispatchTable = {
 
     nop: noauth(() => { }),
 
-    connect: noauth((ctx, channel: wirestr) => {
+    connect: noauth(async (ctx, channel: wirestr) => {
         if (channel == null) return;
+
+        // reject connect if too many connections already
+        const ipmax = await ctx.gw.config.getOptionNum(ConfigKey.MaxSessionsPerIP);
+        if (ipmax > 0) {
+            const clones = ctx.gw.getChannelClients(channel).filter(x => x.ip === ctx.ip);
+            if (clones.length >= ipmax) {
+                logger.warn(`${ctx.ip} tried to join ${channel} but was declined due to holding ${clones.length} preexisting session(s)`);
+                ctx.send("connect", 0);
+                return;
+            }
+        }
 
         // get controller, reject connect if no controller or not permitted
         const controller = ctx.gw.getController(channel);
         if (controller == null || !controller.canUse(ctx)) {
+            if (controller != null) {
+                logger.warn(`${ctx.ip} tried to join ${channel} but was declined by the controller`);
+            }
+            else {
+                logger.warn(`${ctx.ip} tried to join ${channel} but was declined because the room is currently in anarchy`);
+            }
             ctx.send("connect", 0);
             return;
         }

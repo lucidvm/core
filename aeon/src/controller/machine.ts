@@ -13,6 +13,7 @@ import { AuthCap, hasCap } from "../auth";
 import type { ClientContext, EventGateway } from "../gateway";
 
 import { ChannelController } from "./base";
+import { ConfigKey } from "../config";
 
 const LAYER_FB = 0;
 const LAYER_PSEUDOCURSOR = 1;
@@ -433,7 +434,7 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     // load machine config
-    loadConfig(data: MachineConfig) {
+    async loadConfig(data: MachineConfig) {
         this.options = data;
         this.broadcastSpecial(ctx => [
             "action",
@@ -444,7 +445,7 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     // handle room join
-    notifyJoin(ctx: ClientContext): void {
+    async notifyJoin(ctx: ClientContext) {
         // room info
         ctx.send(
             "connect",
@@ -486,7 +487,7 @@ export abstract class BaseMachine extends ChannelController {
         }
 
         // ugly way of giving some time for automated handshaking
-        if (this.gw.authMandate && !hasCap(ctx.authcaps, AuthCap.Registered)) {
+        if ((await this.gw.config.getOptionBool(ConfigKey.AuthMandatory)) && !hasCap(ctx.authcaps, AuthCap.Registered)) {
             setTimeout(() => {
                 if (!hasCap(ctx.authcaps, AuthCap.Registered)) {
                     ctx.announce("Authentication is mandatory on this instance. Please log in.");    
@@ -498,7 +499,7 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     // handle room part
-    notifyPart(ctx: ClientContext): void {
+    notifyPart(ctx: ClientContext) {
         // remove from turn queue
         const i = this.turnQueue.indexOf(ctx);
         if (i !== -1) {
@@ -514,11 +515,11 @@ export abstract class BaseMachine extends ChannelController {
         this.emit(MachineEvents.UserPart, ctx);
     }
 
-    notifyNick(ctx: ClientContext, oldnick: string): void {
+    notifyNick(ctx: ClientContext, oldnick: string) {
         this.emit(MachineEvents.UserNick, ctx, oldnick);
     }
 
-    notifyIdentify(ctx: ClientContext): void {
+    async notifyIdentify(ctx: ClientContext) {
         ctx.send("action",
             this.canTakeTurn(ctx),
             this.canPlaceVote(ctx),
@@ -526,7 +527,7 @@ export abstract class BaseMachine extends ChannelController {
     }
 
     // interpret guac/collabvm-specific opcode
-    interpret(ctx: ClientContext, opcode: string, ...args: wireprim[]): void {
+    async interpret(ctx: ClientContext, opcode: string, ...args: wireprim[]) {
         switch (opcode) {
             case "turn":
                 if (this.canTakeTurn(ctx)) {
@@ -545,6 +546,14 @@ export abstract class BaseMachine extends ChannelController {
                 }
                 break;
             case "vote":
+                if (this.voteActive && await this.gw.config.getOptionBool(ConfigKey.CheckVoteIP)) {
+                    const ymatch = this.voteAyes.find(x => ctx !== x && ctx.ip === x.ip);
+                    const nmatch = this.voteNays.find(x => ctx !== x && ctx.ip === x.ip);
+                    if (ymatch != null || nmatch != null) {
+                        this.logger.warn(`${ctx.nick} (${ctx.ip}) tried to vote, but ${(ymatch ?? nmatch).nick} already voted from their IP`);
+                        return;
+                    }
+                }
                 if (this.canPlaceVote(ctx)) {
                     const b = ensureBoolean(args[0]);
                     if (b) {

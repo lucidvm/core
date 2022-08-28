@@ -6,8 +6,8 @@ import express, { Response } from "express";
 
 import { ClientIdentity, AuthCap, hasCap, LocalDriver } from "../auth";
 import type { EventGateway } from "../gateway";
-import type { ConfigKey } from "../db";
-import type { ConfigManager, MachineManager } from "../manager";
+import type { ConfigDriver, ConfigKey } from "../config";
+import type { MachineManager } from "../manager";
 
 function checkCap(res: Response, cap: AuthCap): boolean {
     if (!hasCap(res.locals.identity.caps, cap)) {
@@ -19,7 +19,7 @@ function checkCap(res: Response, cap: AuthCap): boolean {
     return false;
 }
 
-export function mountAPI(gw: EventGateway, config: ConfigManager, machines: MachineManager, acl: LocalDriver) {
+export function mountAPI(gw: EventGateway, config: ConfigDriver, machines: MachineManager, acl: LocalDriver) {
     const router = express.Router();
     router.use(async (req, res, next) => {
         function err() {

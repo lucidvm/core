@@ -77,21 +77,6 @@ export enum AuthCap {
     All             = ~(~0 << 31) & ~System,
 }
 
-export interface ClientIdentity {
-    get strategy(): string;
-    get id(): string | number;
-    get caps(): number;
-    get fencepost(): Date;
-}
-
-export interface AuthDriver {
-    get id(): string;
-    init(): void | Promise<void>;
-    useDriver(): wireprim[];
-    getIdentity(id: string | number): ClientIdentity | Promise<ClientIdentity>;
-    identify(secret: string): ClientIdentity | Promise<ClientIdentity>;
-}
-
 export function hasCap(caps: number, cap: AuthCap): boolean {
     if (!(cap & AuthCap.System) && (caps & AuthCap.Wheel) === AuthCap.Wheel) return true;
     return (caps & cap) === cap;
@@ -110,4 +95,19 @@ export function getLegacyRank(caps: number): LegacyRank {
     if (hasCap(caps, AuthCap.VisibleMod)) return LegacyRank.Moderator;
     if (hasCap(caps, AuthCap.VisibleUser)) return LegacyRank.Registered;
     return LegacyRank.Anonymous;
+}
+
+export interface ClientIdentity {
+    get strategy(): string;
+    get id(): string | number;
+    get caps(): number;
+    get fencepost(): Date;
+}
+
+export interface AuthDriver {
+    get id(): string;
+    init(): void | Promise<void>;
+    useDriver(): wireprim[];
+    getIdentity(id: string | number): ClientIdentity | Promise<ClientIdentity>;
+    identify(secret: string): ClientIdentity | Promise<ClientIdentity>;
 }

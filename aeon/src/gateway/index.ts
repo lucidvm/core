@@ -13,15 +13,10 @@ import { AuthManager } from "../auth";
 import { UploadManager } from "../routes";
 import { CommandManager } from "../commands";
 import { Logger } from "../logger";
+import type { ConfigDriver } from "../config";
 
 import { ClientContext, DispatchTable } from "./client";
 import { baseMethods, capTables } from "./methods";
-
-export interface InstanceInfo {
-    name: string;
-    sysop: string;
-    contact: string;
-}
 
 const privateCaps: string[] = [];
 
@@ -38,12 +33,6 @@ export class EventGateway {
     private readonly server: Instance;
     readonly express: Application;
 
-    instanceInfo: InstanceInfo = {
-        name: "LucidVM",
-        sysop: "N/A",
-        contact: "N/A"
-    };
-
     private clients: Map<number, ClientContext> = new Map();
     private controllers: Map<string, ChannelController> = new Map();
     private nextid: number = 0;
@@ -51,7 +40,7 @@ export class EventGateway {
     readonly commands: CommandManager = new CommandManager();
     readonly uploads: UploadManager;
 
-    constructor(readonly auth: AuthManager, public authMandate = false, readonly maxPost = 8_000_000) {
+    constructor(readonly auth: AuthManager, readonly config: ConfigDriver, readonly maxPost = 8_000_000) {
         this.server = exprws(express());
         this.express = this.server.app;
 
@@ -121,7 +110,7 @@ export class EventGateway {
         return Object.values(this.clients);
     }
 
-    getChannelClients(channel: string) {
+    getChannelClients(channel: string): ClientContext[] {
         return this.getClients().filter(x => x.channel === channel);
     }
 

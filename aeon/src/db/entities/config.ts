@@ -4,26 +4,12 @@
 
 import { Entity, Column, PrimaryColumn } from "typeorm";
 
-export enum ConfigKey {
-    ListenHost = "gateway.listen.address",
-    ListenPort = "gateway.listen.port",
-
-    InstanceName = "gateway.instance.name",
-    InstanceSysop = "gateway.instance.sysop",
-    InstanceContact = "gateway.instance.contact",
-
-    AuthMandatory = "gateway.auth.required",
-    TokenSecret = "gateway.auth.tokenSecret",
-
-    UserPassword = "gateway.auth.legacy.connectPassword"
-}
-
 @Entity()
 export class ConfigOption {
 
     // the configuration option
     @PrimaryColumn()
-    id: ConfigKey;
+    id: string;
 
     // its value
     @Column({ nullable: true })
