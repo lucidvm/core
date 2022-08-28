@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@julusian/jpeg-turbo": "^2.0.0",
+    "@lucidvm/rfb": "https://github.com/lucidvm/rfb.git",
     "@lucidvm/shared": "https://github.com/lucidvm/shared.git",
     "@lucidvm/virtue": "link:../virtue",
     "@ygoe/msgpack": "^1.0.3",

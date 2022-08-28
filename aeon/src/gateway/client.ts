@@ -42,7 +42,7 @@ export class ClientContext {
     readonly gw: EventGateway;
     readonly ip: string;
 
-    gwcaps: Map<string, boolean> = new Map();
+    readonly gwcaps: Map<string, boolean> = new Map();
 
     strategy: string = "anonymous";
     authcaps: number = AuthCap.None;
