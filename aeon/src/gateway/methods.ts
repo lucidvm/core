@@ -12,7 +12,9 @@ import {
     GatewayCap
 } from "@lucidvm/shared";
 
-import type { DispatchTable } from "./client";
+import { AuthCap } from "../auth";
+
+import type { DispatchTable, DispatchMethod, DispatchEntry } from "./client";
 
 const RENAME_OK = 0;
 const RENAME_INUSE = 1;
@@ -31,9 +33,19 @@ const AUTH_REJECT = 4;
 const AUTH_NONSENSE = 5;
 const AUTH_STALE = 6;
 
+function normal(invoke: DispatchMethod): DispatchEntry {
+    return { invoke };
+}
+function noauth(invoke: DispatchMethod): DispatchEntry {
+    return {
+        requires: AuthCap.None,
+        invoke
+    };
+}
+
 export const capTables: Record<string, DispatchTable> = {
     [GatewayCap.LECTunnel]: {
-        codebook(ctx) {
+        codebook: noauth(ctx => {
             if (ctx.conduit instanceof LECConduit) {
                 ctx.send("codebook", ...ctx.conduit.dumpCodebook());
             }
@@ -41,10 +53,10 @@ export const capTables: Record<string, DispatchTable> = {
                 // send an empty codebook if we arent using LEC
                 ctx.send("codebook");
             }
-        }
+        })
     },
     [GatewayCap.Auth]: {
-        async auth(ctx, stage: wirenum, data: wirestr) {
+        auth: noauth(async (ctx, stage: wirenum, data: wirestr) => {
             stage = ensureNumber(stage);
             switch (stage) {
                 case AUTH_ADVERTISE:
@@ -83,22 +95,22 @@ export const capTables: Record<string, DispatchTable> = {
                     break;
                 }
             }
-        }
+        })
     },
     [GatewayCap.Instance]: {
-        async instance(ctx) {
+        instance: noauth(ctx => {
             // software, version, instance name, instance maintainer, instance contact details
             const info = ctx.gw.instanceInfo;
             ctx.send("instance", "LucidVM", "DEV", info.name, info.sysop, info.contact);
-        }
+        })
     }
 };
 
 export const baseMethods: DispatchTable = {
 
-    nop() { },
+    nop: noauth(() => { }),
 
-    connect(ctx, channel: wirestr) {
+    connect: noauth((ctx, channel: wirestr) => {
         if (channel == null) return;
 
         // get controller, reject connect if no controller or not permitted
@@ -125,9 +137,9 @@ export const baseMethods: DispatchTable = {
         const peers = ctx.gw.getChannelClients(channel);
         ctx.sendPeers(peers);
         ctx.gw.announcePeer(ctx);
-    },
+    }),
 
-    disconnect(ctx, internal: wirebool) {
+    disconnect: noauth((ctx, internal: wirebool) => {
         const chan = ctx.channel;
         if (chan != null) {
             ctx.gw.getController(chan)?.notifyPart(ctx);
@@ -137,9 +149,9 @@ export const baseMethods: DispatchTable = {
         if (!internal) {
             ctx.send("connect", 2);
         }
-    },
+    }),
 
-    list(ctx) {
+    list: noauth(ctx => {
         ctx.sendList(
             ctx.gw.getControllers().filter(x => x.canUse(ctx)).map(x => ({
                 id: x.channel,
@@ -147,9 +159,9 @@ export const baseMethods: DispatchTable = {
                 thumbnail: x.getThumbnail()
             }))
         );
-    },
+    }),
 
-    rename(ctx, nick: wirestr) {
+    rename: noauth((ctx, nick: wirestr) => {
         if (nick == null) {
             nick = ctx.guestify();
         }
@@ -179,9 +191,9 @@ export const baseMethods: DispatchTable = {
 
         ctx.gw.announceRename(ctx, oldnick);
         ctx.gw.getController(ctx.channel)?.notifyNick(ctx, oldnick);
-    },
+    }),
 
-    chat(ctx, text: wirestr) {
+    chat: normal((ctx, text: wirestr) => {
         if (ctx.channel == null) return;
 
         // XXX: messy
@@ -195,9 +207,9 @@ export const baseMethods: DispatchTable = {
 
         text = ensureString(text);
         ctx.gw.sendChat(ctx, text);
-    },
+    }),
 
-    async admin(ctx, command: wirenum, data: wirestr) {
+    admin: noauth(async (ctx, command: wirenum, data: wirestr) => {
         switch (ensureNumber(command)) {
             // repurpose the admin login prompt as an alternate way to access password auth
             case 2:
@@ -216,11 +228,11 @@ export const baseMethods: DispatchTable = {
                 break;
         }
         // TODO: maybe implement collabvm's other horrifying admin commands
-    },
+    }),
 
     // lucidvm capability handshake
 
-    cap(ctx, stage: number, ...caps: string[]) {
+    cap: noauth((ctx, stage: number, ...caps: string[]) => {
         stage = ensureNumber(stage);
         const gwcaps = ctx.gw.getCaps();
         switch (stage) {
@@ -259,6 +271,6 @@ export const baseMethods: DispatchTable = {
                 ctx.conduit = next;
                 break;
         }
-    }
+    })
 
 };

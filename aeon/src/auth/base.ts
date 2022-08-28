@@ -14,7 +14,7 @@ enum LegacyRank {
 
 export enum AuthCap {
     // no permissions at all
-    None            = 1 << 0,
+    None            = 0,
     // known user
     Registered      = 1 << 1,
     // appears as a registered user in the frontend
@@ -93,7 +93,7 @@ export interface AuthDriver {
 }
 
 export function hasCap(caps: number, cap: AuthCap): boolean {
-    if ((caps & AuthCap.Wheel) === AuthCap.Wheel) return true;
+    if (!(cap & AuthCap.System) && (caps & AuthCap.Wheel) === AuthCap.Wheel) return true;
     return (caps & cap) === cap;
 }
 

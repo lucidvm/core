@@ -20,13 +20,16 @@ initDatabase().then(async db => {
     // register qotd extension
     const quotes = db.getRepository(Quote);
     registerPrivateExtension(GatewayCap.QOTD, {
-        async qotd(ctx) {
-            const all = await quotes.find();
-            if (all.length < 1) {
-                ctx.send("qotd", "");
-                return;
+        qotd: {
+            requires: AuthCap.None,
+            async invoke(ctx) {
+                const all = await quotes.find();
+                if (all.length < 1) {
+                    ctx.send("qotd", "");
+                    return;
+                }
+                ctx.send("qotd", all[Math.floor(Math.random() * all.length)].text);
             }
-            ctx.send("qotd", all[Math.floor(Math.random() * all.length)].text);
         }
     });
 

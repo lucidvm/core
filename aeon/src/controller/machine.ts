@@ -2,7 +2,7 @@
 // Copyright (C) 2022 dither
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { Canvas, Image, ImageData } from "canvas";
+import { Canvas, ImageData } from "canvas";
 import he from "he";
 import { v4 } from "uuid";
 import jpg from "@julusian/jpeg-turbo";

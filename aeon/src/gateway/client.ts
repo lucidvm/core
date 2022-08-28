@@ -17,24 +17,14 @@ import { ClientIdentity, AuthCap, getLegacyRank, hasCap } from "../auth";
 
 import type { EventGateway } from "./index";
 
-export interface DispatchTable {
-    [k: string]: ((ctx: ClientContext, ...args: wireprim[]) => void | Promise<void>);
+export type DispatchMethod = (ctx: ClientContext, ...args: wireprim[]) => void | Promise<void>;
+export interface DispatchEntry {
+    requires?: number;
+    invoke: DispatchMethod;
 }
-
-const anonpermitted: Record<string, boolean> = {
-    nop: true,
-    connect: true,
-    disconnect: true,
-    list: true,
-    rename: true,
-    admin: true,
-
-    extend: true,
-    upgrade: true,
-    auth: true,
-    instance: true,
-    cap: true
-};
+export interface DispatchTable {
+    [k: string]: DispatchEntry;
+}
 
 export class ClientContext {
 
@@ -64,14 +54,21 @@ export class ClientContext {
                 const stmts = this.conduit.unpack(x);
                 for (const stmt of stmts) {
                     const opcode = ensureString(stmt.shift());
-                    if (gw.authMandate && !hasCap(this.authcaps, AuthCap.Registered) && !anonpermitted[opcode]) {
-                        console.warn("rejected opcode " + opcode + " from unauthenticated user");
-                        return;
-                    }
                     if (opcode in this.dispatch) {
-                        await this.dispatch[opcode](this, ...stmt);
+                        const data = this.dispatch[opcode];
+                        const mask = data.requires ?? (gw.authMandate ? AuthCap.Registered : AuthCap.None);
+                        if (hasCap(this.authcaps, mask)) {
+                            await data.invoke(this, ...stmt);
+                        }
+                        else {
+                            console.warn(`rejected base opcode ${opcode} from ${this.ip} (${this.authcaps.toString(2).padStart(32, "0")} vs ${mask.toString(2).padStart(32, "0")})`);
+                        }
                     }
                     else {
+                        if (gw.authMandate && !hasCap(this.authcaps, AuthCap.Registered)) {
+                            console.warn(`declining to forward opcode ${opcode} from ${this.ip} to controller (not registered!)`);
+                            return;
+                        }
                         await gw.getController(this.channel)?.interpret(this, opcode, ...stmt);
                     }
                 }
@@ -85,7 +82,7 @@ export class ClientContext {
         ws.on("close", () => {
             if (this.channel != null) {
                 // XXX: kind of ugly!
-                this.dispatch["disconnect"](this, true);
+                this.dispatch["disconnect"].invoke(this, true);
             }
         });
 
