@@ -29,8 +29,8 @@ export class RemoteMachine extends BaseMachine {
 
         this.client = new LRMPClient(chan);
         this.client.onCaps(caps => {
-            // TODO
             this.logger.debug("supported caps", caps);
+            this.updateMonitorCaps(caps);
         });
         this.client.onReject(() => {
             this.logger.error("monitor rejected the connection");

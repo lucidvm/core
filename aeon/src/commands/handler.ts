@@ -5,6 +5,7 @@
 import { AuthCap, hasCap } from "../auth";
 import type { ChannelController } from "../controller";
 import type { ClientContext, EventGateway } from "../gateway";
+import { Logger } from "../logger";
 
 export function lex(source: string) {
     const tokens: string[] = [];
@@ -94,10 +95,12 @@ export interface CommandDefinitionStrict extends CommandDefinition {
 const PREFIX = "/";
 
 export class CommandManager {
-    readonly commands: Record<string, CommandDefinitionStrict> = {};
+    private readonly logger = new Logger("commands");
+    private readonly commands: Record<string, CommandDefinitionStrict> = {};
 
     async handleMessage(client: ClientContext, content: string) {
         const prefixed = content.startsWith(PREFIX);
+        var cmdname: string;
 
         if (prefixed) {
             try {
@@ -107,6 +110,7 @@ export class CommandManager {
                 if (args.length <= 0) return;
 
                 const command = args.shift().toLowerCase();
+                cmdname = command;
                 if (!(command in this.commands)) {
                     throw new Error(`${command}: Command not found`);
                     return;
@@ -171,7 +175,9 @@ export class CommandManager {
                 }, ...(largs.length > 0 ? largs : args));
             }
             catch (e) {
-                client.announce(e.toString().substring(7));
+                const error = e.toString();
+                this.logger.warn(`${client.ip} tried to run /${cmdname}, but failed; ${error}`);
+                client.announce(error.substring(7));
             }
         }
     }

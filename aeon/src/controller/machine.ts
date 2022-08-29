@@ -80,6 +80,9 @@ export abstract class BaseMachine extends ChannelController {
     private voteNays: ClientContext[] = [];
 
     private lastUpload: Map<string, number> = new Map();
+
+    private monitorCanReset = false;
+    private monitorCanUpload = false;
     
     protected lastWidth: number = 800;
     protected lastHeight: number = 600;
@@ -198,11 +201,11 @@ export abstract class BaseMachine extends ChannelController {
     }
     canPlaceVote(ctx: ClientContext) {
         // it doesnt make much sense to have a "vote override" permission
-        return this.canUse(ctx) && this.options.canVote;
+        return this.monitorCanReset && this.canUse(ctx) && this.options.canVote;
     }
     canUploadFile(ctx: ClientContext) {
         // TODO: factor in whether the backend actually supports uploads
-        return this.canUse(ctx) && (hasCap(ctx.authcaps, AuthCap.UploadOverride) || this.options.canUpload);
+        return this.monitorCanUpload && this.canUse(ctx) && (hasCap(ctx.authcaps, AuthCap.UploadOverride) || this.options.canUpload);
     }
 
     // periodic routine
@@ -436,6 +439,18 @@ export abstract class BaseMachine extends ChannelController {
     // load machine config
     async loadConfig(data: MachineConfig) {
         this.options = data;
+        this.broadcastSpecial(ctx => [
+            "action",
+            this.canTakeTurn(ctx),
+            this.canPlaceVote(ctx),
+            this.canUploadFile(ctx)
+        ]);
+    }
+
+    protected updateMonitorCaps(caps: string[]) {
+        this.logger.debug("updating capabilities:", ...caps);
+        this.monitorCanReset = caps.indexOf("reset") >= 0;
+        this.monitorCanUpload = caps.indexOf("file") >= 0;
         this.broadcastSpecial(ctx => [
             "action",
             this.canTakeTurn(ctx),

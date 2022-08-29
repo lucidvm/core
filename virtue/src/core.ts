@@ -203,9 +203,14 @@ export class QEMUMonitor extends EventEmitter {
         return this.do("human-monitor-command", { "command-line": command });
     }
 
+    hasSnapshot() {
+        return this.snapshotname != null;
+    }
+
     snapshot(name: string) {
         this.snapshotname = name;
         this.hmp(`savevm ${name}`);
+        this.emit("snapshot");
     }
 
     reset() {

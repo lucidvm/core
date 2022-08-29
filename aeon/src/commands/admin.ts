@@ -5,8 +5,11 @@
 import { AuthCap } from "../auth";
 
 import { BaseMachine, LocalMachine } from "../controller";
+import { Logger } from "../logger";
 import type { MachineManager } from "../manager";
 import type { CommandManager } from "./handler";
+
+const logger = new Logger("commands:admin");
 
 export function registerAdminCommands(handler: CommandManager, machines: MachineManager) {
     handler.register({
@@ -18,6 +21,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
                 const name = "manual-" + Date.now();
                 ctx.room.monitor.snapshot(name);
                 await machines.setSnapshot(ctx.room.channel, name);
+                logger.print(`${ctx.author.ip} is snapshotting ${ctx.room.channel}`);
                 ctx.author.announce("Snapshot started.");
             }
             else {
@@ -32,6 +36,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
         async method(ctx) {
             if (ctx.room instanceof BaseMachine) {
                 ctx.room.reset();
+                logger.print(`${ctx.author.ip} has force-reset ${ctx.room.channel}`);
                 ctx.author.announce("Machine forcefully reset.");
             }
             else {

@@ -49,6 +49,9 @@ export class LocalMachine extends BaseMachine {
         });
 
         this.monitor.start();
+
+        this.updateMonitorCaps(this.monitor.hasSnapshot() ? ["reset"] : []);
+        this.monitor.on("snapshot", () => this.updateMonitorCaps(["reset"]));
     }
 
     protected override destroyImpl(): void | Promise<void> {
