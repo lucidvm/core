@@ -62,8 +62,9 @@ initDatabase().then(async db => {
     const mchmgr = new MachineManager(gw, db, path.join(__dirname, "..", "vms"));
 
     // mount additional routes
-    mountWebapp(gw);
     mountAPI(gw, config, mchmgr, acl);
+    // webapp should be the last thing to mount!
+    mountWebapp(gw);
 
     // register legacy driver
     const pwdrv = new SimplePasswordDriver(await config.getOption(ConfigKey.UserPassword));

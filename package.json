@@ -1,7 +1,7 @@
 {
     "private": true,
     "scripts": {
-        "build-core": "cd flashback && yarn -D && yarn build && cd ../virtue && yarn -D && yarn build && cd ../aeon && yarn -D && yarn build && cd ..",
+        "build-core": "cd flashback && yarn -D && yarn build && cd ../satori && yarn -D && yarn build && cd ../virtue && yarn -D && yarn build && cd ../aeon && yarn -D && yarn build && cd ..",
         "run-gateway": "node aeon/dist/index.js"
     }
 }

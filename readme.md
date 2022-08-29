@@ -23,10 +23,12 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 - **[flashback](https://github.com/lucidvm/flashback)**: Fork of the archaic collab-vm-web-app with hacked-in support for LucidVM extensions. For the time being (since we're already building atop the CollabVM 1.2 protocol anyway), this is the "reference client".
 
-- **satori**: Next generation web client (currently in planning phase, will be based on the `@lucidvm/client` library).
+- **satori**: Next generation web client (currently in extremely early development).
 
 ### Libraries
 
 - **[shared](https://github.com/lucidvm/shared)**: Code shared between other components of the project (such as event conduit abstractions and LEC codebooks).
 
 - **[client](https://github.com/lucidvm/client)**: CollabVM client library geared towards LucidVM.
+
+- **[rfb](https://github.com/lucidvm/rfb)**: A fork of [vnc-rfb-client](https://github.com/filipecbmoc/vnc-rfb-client) with a few changes for LucidVM.

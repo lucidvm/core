@@ -1,0 +1,27 @@
+{
+  "name": "@lucidvm/satori",
+  "version": "0.0.0",
+  "description": "Next generation webapp",
+  "author": "dither",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "scripts": {
+    "build": "parcel build src/index.html"
+  },
+  "devDependencies": {
+    "@types/events": "^3.0.0",
+    "@types/react": "^18.0.17",
+    "@types/react-dom": "^18.0.6",
+    "parcel": "^2.7.0",
+    "typescript": "^4.8.2"
+  },
+  "dependencies": {
+    "@lucidvm/client": "https://github.com/lucidvm/client.git",
+    "bootstrap": "^5.2.0",
+    "events": "^3.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "reactstrap": "^9.1.4"
+  }
+}

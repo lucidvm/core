@@ -9,7 +9,19 @@ import express from "express";
 import { EventGateway } from "../gateway";
 
 export function mountWebapp(gw: EventGateway) {
-    const wabase = path.resolve(__dirname, "../../../flashback");
-    gw.express.use(express.static(path.join(wabase, "dist")));
-    gw.express.use(express.static(path.join(wabase, "static")));
+    const base = path.resolve(__dirname, "../../static");
+    gw.express.use(express.static(base));
+
+    const flashback = path.resolve(__dirname, "../../../flashback");
+    gw.express.use("/flashback", express.static(path.join(flashback, "dist")));
+    gw.express.use("/flashback", express.static(path.join(flashback, "static")));
+
+    const satori = path.resolve(__dirname, "../../../satori");
+    gw.express.use(express.static(path.join(satori, "dist")));
+    gw.express.use(express.static(path.join(satori, "static")));
+
+    // fallback route for satori
+    gw.express.get("/*", (req, res) => {
+        res.sendFile(path.join(satori, "dist", "index.html"));
+    });
 }
