@@ -2,6 +2,8 @@
 // Copyright (C) 2022 dither
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import process from "process";
+
 import he from "he";
 
 import {
@@ -109,7 +111,7 @@ export const capTables: Record<string, DispatchTable> = {
             const name = await ctx.gw.config.getOption(ConfigKey.InstanceName);
             const sysop = await ctx.gw.config.getOption(ConfigKey.InstanceSysop);
             const contact = await ctx.gw.config.getOption(ConfigKey.InstanceContact);
-            ctx.send("instance", "LucidVM", "DEV", name, sysop, contact);
+            ctx.send("instance", "LucidVM", process.env["npm_package_version"] ?? "0.0.0-dev", name, sysop, contact);
         })
     }
 };
@@ -126,7 +128,7 @@ export const baseMethods: DispatchTable = {
         if (ipmax > 0) {
             const clones = ctx.gw.getChannelClients(channel).filter(x => x.ip === ctx.ip);
             if (clones.length >= ipmax) {
-                logger.warn(`${ctx.ip} tried to join ${channel} but was declined due to holding ${clones.length} preexisting session(s)`);
+                logger.warn(`${ctx.ip} tried to join ${channel}, but is already holding ${clones.length} other session(s)`);
                 ctx.send("connect", 0);
                 return;
             }
@@ -136,10 +138,10 @@ export const baseMethods: DispatchTable = {
         const controller = ctx.gw.getController(channel);
         if (controller == null || !controller.canUse(ctx)) {
             if (controller != null) {
-                logger.warn(`${ctx.ip} tried to join ${channel} but was declined by the controller`);
+                logger.warn(`${ctx.ip} tried to join ${channel}, but was declined by the controller`);
             }
             else {
-                logger.warn(`${ctx.ip} tried to join ${channel} but was declined because the room is currently in anarchy`);
+                logger.warn(`${ctx.ip} tried to join ${channel}, but the room is currently in anarchy`);
             }
             ctx.send("connect", 0);
             return;
