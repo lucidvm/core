@@ -19,7 +19,6 @@ export function MachineView(props: MachineViewProps) {
     return <Row>
         <Col>
             <canvas ref={canvas} width="1024" height="768"></canvas>
-            
         </Col>
         <Col>
             <h1>{vm}</h1>

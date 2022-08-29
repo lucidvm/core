@@ -2,6 +2,8 @@
 *.db*
 vms/
 virtue/src/standalone.ts
+fb.png
+test.js
 
 
 ### node stuff

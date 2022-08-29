@@ -16,7 +16,7 @@
     "typescript": "^4.8.2"
   },
   "dependencies": {
-    "@lucidvm/client": "https://github.com/lucidvm/client.git",
+    "@lucidvm/client": "link:../client",
     "bootstrap": "^5.2.0",
     "events": "^3.3.0",
     "react": "^18.2.0",

@@ -29,6 +29,6 @@ This software is currently **pre-alpha**, and at this stage, **I will not assist
 
 - **[shared](https://github.com/lucidvm/shared)**: Code shared between other components of the project (such as event conduit abstractions and LEC codebooks).
 
-- **[client](https://github.com/lucidvm/client)**: CollabVM client library geared towards LucidVM.
+- client: CollabVM client library geared towards LucidVM.
 
 - **[rfb](https://github.com/lucidvm/rfb)**: A fork of [vnc-rfb-client](https://github.com/filipecbmoc/vnc-rfb-client) with a few changes for LucidVM.

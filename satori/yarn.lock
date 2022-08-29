@@ -112,16 +112,9 @@
   resolved "https://registry.yarnpkg.com/@lmdb/lmdb-win32-x64/-/lmdb-win32-x64-2.5.2.tgz#28f643fbc0bec30b07fbe95b137879b6b4d1c9c5"
   integrity sha512-zrBczSbXKxEyK2ijtbRdICDygRqWSRPpZMN5dD1T8VMEW5RIhIbwFWw2phDRXuBQdVDpSjalCIUMWMV2h3JaZA==
 
-"@lucidvm/client@https://github.com/lucidvm/client.git":
+"@lucidvm/client@link:../client":
   version "0.0.0"
-  resolved "https://github.com/lucidvm/client.git#1e56a90ca73566b4ffe4befd9aa8beced6af16c5"
-  dependencies:
-    "@lucidvm/shared" "https://github.com/lucidvm/shared.git"
-    buffer "^6.0.3"
-    canvas "^2.9.3"
-    events "^3.3.0"
-    isomorphic-ws "^5.0.0"
-    ws "^8.8.1"
+  uid ""
 
 "@lucidvm/shared@https://github.com/lucidvm/shared.git":
   version "0.2.0"

@@ -1,0 +1,24 @@
+{
+  "name": "@lucidvm/client",
+  "version": "0.0.0",
+  "description": "CVMP Client Library",
+  "main": "dist/index.js",
+  "author": "dither",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.3",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@lucidvm/shared": "https://github.com/lucidvm/shared.git",
+    "buffer": "^6.0.3",
+    "canvas": "^2.9.3",
+    "events": "^3.3.0",
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.8.1"
+  }
+}
