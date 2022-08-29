@@ -159,14 +159,14 @@ export abstract class BaseMachine extends ChannelController {
         });
 
         this.on(MachineEvents.VoteCount, (ctx: ClientContext, aye: boolean) => {
-            this.logger.print(`${ctx.nick} (${ctx.ip}) voted ${aye ? "yes" : "no"}`);
+            this.logger.print(`${ctx} voted ${aye ? "yes" : "no"}`);
             if (this.options.announceVoters) {
                 this.announce(`${ctx.nick} voted ${aye ? "for" : "against"} the reset`);
             }
         });
 
         this.on(MachineEvents.FileUpload, (ctx: ClientContext, filename: string) => {
-            this.logger.print(`${ctx.nick} (${ctx.ip}) uploaded ${filename}`);
+            this.logger.print(`${ctx} uploaded ${filename}`);
             if (this.options.announceUpload) {
                 this.announce(`${ctx.nick} uploaded ${he.encode(filename)}`);
             }
@@ -181,7 +181,7 @@ export abstract class BaseMachine extends ChannelController {
             else {
                 if (lastuser !== queue[0]) {
                     lastuser = queue[0];
-                    this.logger.print(`${lastuser.nick} (${lastuser.ip}) now has control of the vm`);
+                    this.logger.print(`${lastuser} now has control of the vm`);
                 }
             }
         });
@@ -565,7 +565,7 @@ export abstract class BaseMachine extends ChannelController {
                     const ymatch = this.voteAyes.find(x => ctx !== x && ctx.ip === x.ip);
                     const nmatch = this.voteNays.find(x => ctx !== x && ctx.ip === x.ip);
                     if (ymatch != null || nmatch != null) {
-                        this.logger.warn(`${ctx.nick} (${ctx.ip}) tried to vote, but ${(ymatch ?? nmatch).nick} already voted from their IP`);
+                        this.logger.warn(`${ctx} tried to vote, but ${(ymatch ?? nmatch).nick} already voted from their IP`);
                         return;
                     }
                 }

@@ -21,7 +21,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
                 const name = "manual-" + Date.now();
                 ctx.room.monitor.snapshot(name);
                 await machines.setSnapshot(ctx.room.channel, name);
-                logger.print(`${ctx.author.ip} is snapshotting ${ctx.room.channel}`);
+                logger.print(`${ctx} is snapshotting ${ctx.room.channel}`);
                 ctx.author.announce("Snapshot started.");
             }
             else {
@@ -36,7 +36,7 @@ export function registerAdminCommands(handler: CommandManager, machines: Machine
         async method(ctx) {
             if (ctx.room instanceof BaseMachine) {
                 ctx.room.reset();
-                logger.print(`${ctx.author.ip} has force-reset ${ctx.room.channel}`);
+                logger.print(`${ctx} has force-reset ${ctx.room.channel}`);
                 ctx.author.announce("Machine forcefully reset.");
             }
             else {

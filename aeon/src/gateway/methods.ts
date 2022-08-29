@@ -83,7 +83,7 @@ export const capTables: Record<string, DispatchTable> = {
                 case AUTH_IDENTIFY: {
                     const [identity, token] = await ctx.gw.auth.identify(ctx.strategy, data);
                     if (identity == null) {
-                        logger.warn(`${ctx.ip} failed to authenticate`);
+                        logger.warn(`${ctx} failed to authenticate`);
                         ctx.send("auth", AUTH_REJECT);
                         return;
                     }
@@ -128,7 +128,7 @@ export const baseMethods: DispatchTable = {
         if (ipmax > 0) {
             const clones = ctx.gw.getChannelClients(channel).filter(x => x.ip === ctx.ip);
             if (clones.length >= ipmax) {
-                logger.warn(`${ctx.ip} tried to join ${channel}, but is already holding ${clones.length} other session(s)`);
+                logger.warn(`${ctx} tried to join ${channel}, but is already holding ${clones.length} other session(s)`);
                 ctx.send("connect", 0);
                 return;
             }
@@ -138,10 +138,10 @@ export const baseMethods: DispatchTable = {
         const controller = ctx.gw.getController(channel);
         if (controller == null || !controller.canUse(ctx)) {
             if (controller != null) {
-                logger.warn(`${ctx.ip} tried to join ${channel}, but was declined by the controller`);
+                logger.warn(`${ctx} tried to join ${channel}, but was declined by the controller`);
             }
             else {
-                logger.warn(`${ctx.ip} tried to join ${channel}, but the room is currently in anarchy`);
+                logger.warn(`${ctx} tried to join ${channel}, but the room is currently in anarchy`);
             }
             ctx.send("connect", 0);
             return;

@@ -69,12 +69,12 @@ export class ClientContext {
                             await data.invoke(this, ...stmt);
                         }
                         else {
-                            this.logger.warn(`rejected base opcode ${opcode} from ${this.ip} (${this.authcaps.toString(2).padStart(32, "0")} vs ${mask.toString(2).padStart(32, "0")})`);
+                            this.logger.warn(`rejected base opcode ${opcode} (${this.authcaps.toString(2).padStart(32, "0")} vs ${mask.toString(2).padStart(32, "0")})`);
                         }
                     }
                     else {
                         if (mustauth && !hasCap(this.authcaps, AuthCap.Registered)) {
-                            this.logger.warn(`declining to forward opcode ${opcode} from ${this.ip} to controller (not registered!)`);
+                            this.logger.warn(`declining to forward opcode ${opcode} to controller (client not registered)`);
                             return;
                         }
                         await gw.getController(this.channel)?.interpret(this, opcode, ...stmt);
@@ -154,6 +154,10 @@ export class ClientContext {
 
     sendChat(peer: ClientContext, content: string) {
         this.send("chat", this.sanitize(peer.nick), this.sanitize(content));
+    }
+
+    toString() {
+        return `${this.nick} (${this.ip})`;
     }
 
 }

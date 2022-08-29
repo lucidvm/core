@@ -176,7 +176,7 @@ export class CommandManager {
             }
             catch (e) {
                 const error = e.toString();
-                this.logger.warn(`${client.ip} tried to run /${cmdname}, but failed; ${error}`);
+                this.logger.warn(`${client} tried to run /${cmdname}, but failed; ${error}`);
                 client.announce(error.substring(7));
             }
         }

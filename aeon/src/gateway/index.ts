@@ -146,7 +146,7 @@ export class EventGateway {
 
     announcePeer(peer: ClientContext, leaving = false) {
         if (peer.channel == null) return;
-        this.logger.print(`${peer.nick} (${peer.ip}) has ${leaving ? "left" : "joined"} ${peer.channel}`);
+        this.logger.print(`${peer} has ${leaving ? "left" : "joined"} ${peer.channel}`);
         for (const client of this.getClients()) {
             if (client.channel !== peer.channel) continue;
             client.sendPeers([peer], leaving);
@@ -164,7 +164,7 @@ export class EventGateway {
 
     sendChat(author: ClientContext, content: string) {
         if (author.channel == null) return;
-        this.logger.print(`${author.nick}: ${content}`);
+        this.logger.print(`${author}: ${content}`);
         for (const client of this.getClients()) {
             if (client.channel !== author.channel) continue;
             client.sendChat(author, content);
