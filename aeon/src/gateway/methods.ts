@@ -111,7 +111,7 @@ export const capTables: Record<string, DispatchTable> = {
             const name = await ctx.gw.config.getOption(ConfigKey.InstanceName);
             const sysop = await ctx.gw.config.getOption(ConfigKey.InstanceSysop);
             const contact = await ctx.gw.config.getOption(ConfigKey.InstanceContact);
-            ctx.send("instance", "LucidVM", process.env["npm_package_version"] ?? "0.0.0-dev", name, sysop, contact);
+            ctx.send("instance", "LucidVM", process.env["npm_package_version"] ?? "0.0.0-unknown", name, sysop, contact);
         })
     }
 };
