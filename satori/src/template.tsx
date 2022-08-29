@@ -29,7 +29,7 @@ export class AppTemplate extends Component<AppTemplateProps, AppTemplateState> {
     render(): ReactNode {
         return <>
             <header>
-            <Navbar container="xxl" expand="sm" fixed="top">
+            <Navbar container="fluid" expand="sm" fixed="top">
                 <NavbarBrand>LucidVM</NavbarBrand>
                 <NavbarToggler onClick={() => this.setState({ navbarOpen: !this.state.navbarOpen })} />
                 <Collapse isOpen={this.state.navbarOpen} navbar>
@@ -41,12 +41,12 @@ export class AppTemplate extends Component<AppTemplateProps, AppTemplateState> {
                 </Collapse>
             </Navbar>
             </header>
-            <Container container="xxl">
+            <Container className="main-content" container="fluid">
                 <Outlet />
             </Container>
             <footer>
-                <Navbar container="xxl" expand="sm" fixed="bottom">
-                    <NavbarText>Client: satori 0.0.0-dev</NavbarText>
+                <Navbar container="fluid" expand="sm" fixed="bottom">
+                    <NavbarText>Client: satori 0.0.0-dev • Server: unknown</NavbarText>
                 </Navbar>
             </footer>
         </>

@@ -4,7 +4,7 @@ import { Buffer } from "buffer";
 import WebSocket from "isomorphic-ws";
 
 import {
-    Codebooks,
+    Codebooks, GatewayCap,
     ensureBoolean, ensureBuffer, ensureNumber, ensureString,
     EventConduit, GuacConduit, JSONConduit, LECConduit,
     wireblob, wirebool, wirenum, wireprim, wirestr
@@ -38,8 +38,6 @@ export interface ChatEntry {
     message: string;
 }
 
-const LUCID_LEVEL = 1;
-
 // lut from guacamole
 const compositeOperation: { [key: number]: GlobalCompositeOperation } = {
 /*  0x0 NOT IMPLEMENTED */
@@ -68,7 +66,7 @@ export class CVMPClient extends EventEmitter {
     protected conduit: EventConduit;
 
     private nick: string;
-    protected level: number;
+    private caps: { [key: string]: boolean; };
 
     get active(): boolean {
         return this.ws != null && this.ws.readyState === WebSocket.OPEN;
@@ -183,33 +181,37 @@ export class CVMPClient extends EventEmitter {
             ctx.emit("sync");
         },
 
-        // lucid-1 extensions
+        // lucid extensions
 
-        // declare protocol extension support
-        extend(ctx, suite: wirestr, level: wirenum) {
-            if (ensureString(suite) === "lucid") {
-                ctx.level = Math.min(LUCID_LEVEL, ensureNumber(level));
-                ctx.send("extend", "lucid", level);
-                ctx.emit("extend", level);
-            }
-            // we only support the lucid suite
-        },
-    
-        // upgrade to a different event conduit
-        upgrade(ctx, accepted: wirebool, target: wirestr) {
-            if (ensureBoolean(accepted)) {
-                switch (ensureString(target)) {
-                    case "guac":
-                        ctx.conduit = new GuacConduit();
-                        break;
-                    case "json":
-                        ctx.conduit = new JSONConduit();
-                        break;
-                    case "lec":
+        // capability handshake
+        cap(ctx, state: wirenum, ...caps: wirestr[]) {
+            switch (ensureNumber(state)) {
+                // caps advertise
+                case 0:
+                    ctx.caps = Object.fromEntries(caps.map(x => [x, true]));
+                    ctx.send("cap", 1, ...([
+                        GatewayCap.LECTunnel,
+                        GatewayCap.JSONTunnel,
+                        GatewayCap.Auth,
+                        GatewayCap.Instance,
+                        //GatewayCap.Routes,
+                        GatewayCap.DontSanitize,
+                        GatewayCap.QOTD,
+                        //GatewayCap.Hurl
+                    ]).filter(x => ctx.caps[x]));
+                    break;
+                case 1:
+                    if (ctx.caps[GatewayCap.LECTunnel]) {
                         ctx.conduit = new LECConduit(Codebooks.CVMP);
-                        break;
-                }
-                ctx.emit("upgrade", target);
+                    }
+                    else if (ctx.caps[GatewayCap.JSONTunnel]) {
+                        ctx.conduit = new JSONConduit();
+                    }
+                    ctx.emit("cap");
+                    break;
+                case 2:
+                    ctx.emit("reject:cap");
+                    break;
             }
         },
 
@@ -245,10 +247,7 @@ export class CVMPClient extends EventEmitter {
         super();
         // request to disable serverside sanitization
         this.on("ready", () => {
-            //this.send("rename");
-            if (this.level >= 1) {
-                this.send("strip", false);
-            }
+            this.send("rename");
         });
     }
 
@@ -270,24 +269,15 @@ export class CVMPClient extends EventEmitter {
             // perform extend handshake
             try {
                 // wait for server to send extend info
-                const level = await this.waitFor<number>("extend");
-                // if the server doesnt support lucid-1, continue
-                if (level >= 1)  {
-                    // request a conduit upgrade to lec
-                    this.send("upgrade", "lec");
-                    // wait for server to confirm
-                    const mode = await this.waitFor<string>("upgrade");
-
-                    // if we are indeed using lec, request the codebook
-                    if (mode === "lec") {
-                        this.send("codebook");
-                        await this.waitFor("codebook");
-                    }
+                await this.waitFor<void>("cap");
+                // if we are indeed using lec, request the codebook
+                if (this.conduit instanceof LECConduit) {
+                    this.send("codebook");
+                    await this.waitFor("codebook");
                 }
             }
             catch (ex) {
-                this.level = 0;
-                console.warn("extend handshake failed, assuming legacy server");
+                console.warn("capability handshake failed, assuming legacy server");
                 console.warn(ex);
             }
 
@@ -298,8 +288,8 @@ export class CVMPClient extends EventEmitter {
         const handleClose = () => {
             this.emit("close");
             if (!this.closing) {
-                console.warn("connection to gateway lost, reconnecting...");
-                this.open(address);
+                console.warn("connection to gateway lost, reconnecting in 5 seconds...");
+                setTimeout(() => this.open(address), 5000);
             }
         }
         this.ws.addEventListener("close", handleClose);
@@ -365,7 +355,7 @@ export class CVMPClient extends EventEmitter {
 
     // retrieve instance info (requires lucid-1 or higher)
     async retrieveInstanceInfo(): Promise<InstanceInfo> {
-        if (this.level < 1) {
+        if (!this.caps[GatewayCap.Instance]) {
             return {
                 software: "CollabVM",
                 version: "1.x",

@@ -16,12 +16,5 @@ export function MachineView(props: MachineViewProps) {
     const canvas = createRef<HTMLCanvasElement>();
     props.controller.setCanvas(canvas);
     props.controller.connect(vm);
-    return <Row>
-        <Col>
-            <canvas ref={canvas} width="1024" height="768"></canvas>
-        </Col>
-        <Col>
-            <h1>{vm}</h1>
-        </Col>
-    </Row>
+    return <canvas ref={canvas} width="800" height="600"></canvas>
 }
