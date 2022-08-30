@@ -589,8 +589,8 @@ export abstract class BaseMachine extends ChannelController {
                     const run = ensureBoolean(args[3]);
 
                     // if within cooldown period, ignore it
-                    if (ctx.ip in this.lastUpload &&
-                        Date.now() <= this.lastUpload[ctx.ip] + this.options.uploadCooldown * 1000) {
+                    if (this.lastUpload.has(ctx.ip) &&
+                        Date.now() <= this.lastUpload.get(ctx.ip) + this.options.uploadCooldown * 1000) {
                         return;
                     }
 
@@ -603,7 +603,7 @@ export abstract class BaseMachine extends ChannelController {
                     const token = v4();
                     this.gw.uploads.registerPostCallback(token, data => {
                         const n = Date.now();
-                        this.lastUpload[ctx.ip] = n;
+                        this.lastUpload.set(ctx.ip, n);
                         this.pushFile(name, data, run);
                         ctx.send("file", FILE_SUCCESS, this.options.uploadCooldown * 1000);
                         this.emit(MachineEvents.FileUpload, ctx, name);

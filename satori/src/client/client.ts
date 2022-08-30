@@ -63,10 +63,14 @@ export class CVMPClient extends EventEmitter {
 
     private ws: WebSocket;
     private closing = true;
-    protected conduit: EventConduit;
+    private conduit: EventConduit;
 
     private nick: string;
-    private caps: { [key: string]: boolean; };
+    private instanceInfo: InstanceInfo;
+    private caps: Map<string, boolean> = new Map();
+    private routes: Map<string, string> = new Map();
+
+    private lastAddress: string;
 
     get active(): boolean {
         return this.ws != null && this.ws.readyState === WebSocket.OPEN;
@@ -188,23 +192,23 @@ export class CVMPClient extends EventEmitter {
             switch (ensureNumber(state)) {
                 // caps advertise
                 case 0:
-                    ctx.caps = Object.fromEntries(caps.map(x => [x, true]));
+                    ctx.caps = new Map(caps.map(x => [x, true]));
                     ctx.send("cap", 1, ...([
                         GatewayCap.LECTunnel,
                         GatewayCap.JSONTunnel,
                         GatewayCap.Auth,
                         GatewayCap.Instance,
-                        //GatewayCap.Routes,
+                        GatewayCap.Routes,
                         GatewayCap.DontSanitize,
                         GatewayCap.QOTD,
                         //GatewayCap.Hurl
-                    ]).filter(x => ctx.caps[x]));
+                    ]).filter(x => ctx.caps.get(x)));
                     break;
                 case 1:
-                    if (ctx.caps[GatewayCap.LECTunnel]) {
+                    if (ctx.caps.get(GatewayCap.LECTunnel)) {
                         ctx.conduit = new LECConduit(Codebooks.CVMP);
                     }
-                    else if (ctx.caps[GatewayCap.JSONTunnel]) {
+                    else if (ctx.caps.get(GatewayCap.JSONTunnel)) {
                         ctx.conduit = new JSONConduit();
                     }
                     ctx.emit("cap");
@@ -238,7 +242,23 @@ export class CVMPClient extends EventEmitter {
                 sysop,
                 contact
             };
+            ctx.instanceInfo = info;
             ctx.emit("instance", info);
+        },
+
+        routes(ctx, count: wirenum, ...args: wirestr[]) {
+            count = ensureNumber(count);
+            if (args.length !== count * 2) {
+                console.warn("received malformed routes from the server");
+                console.warn(count, ...args);
+                return;
+            }
+            for (var i = 0; i < count * 2; i += 2) {
+                const name = args[i];
+                const route = args[i + 1];
+                ctx.routes.set(name, route);
+            }
+            ctx.emit("routes", ctx.routes);
         }
     
     };
@@ -248,6 +268,12 @@ export class CVMPClient extends EventEmitter {
         // request to disable serverside sanitization
         this.on("ready", () => {
             this.send("rename");
+        });
+        this.on("close", () => {
+            if (!this.closing) {
+                console.warn("connection to gateway lost, reconnecting in 5 seconds...");
+                setTimeout(() => this.open(this.lastAddress), 5000);
+            }
         });
     }
 
@@ -259,6 +285,7 @@ export class CVMPClient extends EventEmitter {
             return;
         }
 
+        this.lastAddress = address;
         this.closing = false;
         this.conduit = new GuacConduit();
         this.ws = new WebSocket(address);
@@ -285,12 +312,12 @@ export class CVMPClient extends EventEmitter {
             this.emit("ready");
         });
 
+        var errored = false;
         const handleClose = () => {
+            if (errored) return;
+            errored = true;
+            this.ws = null;
             this.emit("close");
-            if (!this.closing) {
-                console.warn("connection to gateway lost, reconnecting in 5 seconds...");
-                setTimeout(() => this.open(address), 5000);
-            }
         }
         this.ws.addEventListener("close", handleClose);
         this.ws.addEventListener("error", handleClose);
@@ -355,7 +382,7 @@ export class CVMPClient extends EventEmitter {
 
     // retrieve instance info (requires lucid-1 or higher)
     async retrieveInstanceInfo(): Promise<InstanceInfo> {
-        if (!this.caps[GatewayCap.Instance]) {
+        if (!this.caps.get(GatewayCap.Instance)) {
             return {
                 software: "CollabVM",
                 version: "1.x",
@@ -364,13 +391,29 @@ export class CVMPClient extends EventEmitter {
                 contact: "unknown"
             };
         }
+        if (this.instanceInfo != null) {
+            return this.instanceInfo;
+        }
         this.send("instance");
         return this.waitFor<InstanceInfo>("instance");
     }
 
+    async retrieveRoutes(): Promise<Map<string, string>> {
+        if (!this.caps.get(GatewayCap.Routes)) {
+            return new Map([
+                ["file", "/upload"]
+            ]);
+        }
+        if (this.routes != null) {
+            return this.routes;
+        }
+        this.send("routes");
+        return this.waitFor<Map<string, string>>("routes");
+    }
+
     // retrieve the room list
     retrieveList(): Promise<ListEntry[]> {
-        this.send("list")
+        this.send("list");
         return this.waitFor<ListEntry[]>("list");
     }
 

@@ -56,8 +56,8 @@ export class EventGateway {
             const id = this.nextid++;
             const ctx = new ClientContext(this, req, ws);
             ctx.loadDispatchTable(baseMethods);
-            this.clients[id] = ctx;
-            ws.on("close", () => delete this.clients[id])
+            this.clients.set(id, ctx);
+            ws.on("close", () => this.clients.delete(id))
         });
 
         this.uploads = new UploadManager(this.express);
@@ -66,8 +66,8 @@ export class EventGateway {
     listen(port: number, host: string) {
         this.server.app.listen(port, host);
         setInterval(() => {
-            for (const id in this.clients) {
-                this.clients[id].sendPing();
+            for (const id of this.clients.keys()) {
+                this.clients.get(id).sendPing();
             }
         }, 15 * 1000);
     }
@@ -80,6 +80,7 @@ export class EventGateway {
             GatewayCap.LegacyAuth,
             GatewayCap.LocalAuth,
             GatewayCap.Instance,
+            GatewayCap.Routes,
             GatewayCap.DontSanitize,
             GatewayCap.Poison
         ];
@@ -88,17 +89,17 @@ export class EventGateway {
 
     registerController(controller: ChannelController) {
         this.logger.print("registering controller to channel", controller.channel);
-        this.controllers[controller.channel] = controller;
+        this.controllers.set(controller.channel, controller);
     }
 
     unregisterController(chan: string) {
         this.logger.print("unregistering controller to channel", chan);
-        delete this.controllers[chan];
+        this.controllers.delete(chan);
         this.send(chan, "chat", "", "The channel controller for this room has been detached. Please select a different room.");
     }
 
     getController(chan: string) {
-        if (chan in this.controllers) return this.controllers[chan];
+        if (this.controllers.has(chan)) return this.controllers.get(chan);
         return null;
     }
 

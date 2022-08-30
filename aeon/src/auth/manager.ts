@@ -35,12 +35,12 @@ export class AuthManager {
     }
 
     hasStrategy(name: string): boolean {
-        return name in this.drivers;
+        return this.drivers.has(name);
     }
 
     async registerDriver(driver: AuthDriver) {
         await driver.init();
-        this.drivers[driver.id] = driver;
+        this.drivers.set(driver.id, driver);
     }
 
     getStrategies() {
@@ -48,19 +48,19 @@ export class AuthManager {
     }
 
     getStrategy(key: string) {
-        return this.drivers[key];
+        return this.drivers.get(key);
     }
 
     use(strategy: string): wireprim[] {
         if (!(strategy in this.drivers)) return null;
-        const driver = this.drivers[strategy];
+        const driver = this.drivers.get(strategy);
         return driver.useDriver();
     }
 
     async identify(strategy: string, secret: string): Promise<[ClientIdentity, string]> {
         // look up the driver
         if (!(strategy in this.drivers)) return [null, null];
-        const driver = this.drivers[strategy];
+        const driver = this.drivers.get(strategy);
 
         // attempt to authenticate against the driver
         const identity = await driver.identify(secret);
@@ -83,7 +83,7 @@ export class AuthManager {
         if (typeof tid !== "string" || typeof strategy !== "string" || typeof caps !== "number") return null;
         if (typeof id !== "string" && typeof id !== "number") return null;
         if (!(strategy in this.drivers)) return null;
-        const driver = this.drivers[strategy];
+        const driver = this.drivers.get(strategy);
 
         // start checking trl
         const pr = this.trl.findOneBy({ id: tid });

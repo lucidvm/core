@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 
 import { RefObject } from "react";
 
-import { CVMPClient, CVMPFramebuffer } from "@lucidvm/client";
+import { CVMPClient, CVMPFramebuffer } from "./client";
 
 function getLocalServer() {
     return (location.protocol === "https:" ? "wss:" : "ws:") + location.host;

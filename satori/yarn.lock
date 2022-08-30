@@ -112,13 +112,9 @@
   resolved "https://registry.yarnpkg.com/@lmdb/lmdb-win32-x64/-/lmdb-win32-x64-2.5.2.tgz#28f643fbc0bec30b07fbe95b137879b6b4d1c9c5"
   integrity sha512-zrBczSbXKxEyK2ijtbRdICDygRqWSRPpZMN5dD1T8VMEW5RIhIbwFWw2phDRXuBQdVDpSjalCIUMWMV2h3JaZA==
 
-"@lucidvm/client@link:../client":
-  version "0.0.0"
-  uid ""
-
-"@lucidvm/shared@https://github.com/lucidvm/shared.git":
+"@lucidvm/shared@https://github.com/lucidvm/shared":
   version "0.2.0"
-  resolved "https://github.com/lucidvm/shared.git#b8909306583861485de8bc08d72a6b28a0dc3a2c"
+  resolved "https://github.com/lucidvm/shared#b8909306583861485de8bc08d72a6b28a0dc3a2c"
   dependencies:
     "@ygoe/msgpack" "^1.0.3"
     buffer "^6.0.3"

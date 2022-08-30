@@ -1,5 +1,4 @@
 import "bootstrap/dist/css/bootstrap.css";
-import "./main.css";
 
 import ReactDOM from "react-dom/client";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
@@ -9,6 +8,7 @@ import { Home, ViewSurrogate, MachineView, Error } from "./routes";
 import { Controller } from "./controller";
 
 const controller = new Controller();
+window["controller"] = controller;
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

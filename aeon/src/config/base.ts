@@ -159,7 +159,7 @@ export abstract class ConfigDriver extends EventEmitter {
         if (!(id in options)) {
             throw new Error("invalid config key specified");
         }
-        if (id in this.cache) return this.cache[id];
+        if (this.cache.has(id)) return this.cache.get(id);
         return await this.getOptionImpl(id) ?? await this.setOption(id, options[id].default)
     }
     async getOptionBool(id: ConfigKey): Promise<boolean> { return ensureBoolean(await this.getOption(id)); }
@@ -171,7 +171,7 @@ export abstract class ConfigDriver extends EventEmitter {
             throw new Error("invalid config key specified");
         }
         value = await this.setOptionImpl(id, value);
-        this.cache[id] = value;
+        this.cache.set(id, value);
         this.emit(id, value);
         return value;
     }

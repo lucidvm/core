@@ -14,10 +14,10 @@ export class UploadManager {
 
             // ugly, not sure what else to do though
             const key = req.originalUrl.split("?")[1];
-            if (key in this.postcbs) {
-                const cb = this.postcbs[key];
+            if (this.postcbs.has(key)) {
+                const cb = this.postcbs.get(key);
                 // dont allow replaying!
-                delete this.postcbs[key];
+                this.postcbs.delete(key);
                 // process the uploaded file
                 cb(req.body);
 
@@ -34,7 +34,7 @@ export class UploadManager {
     }
 
     registerPostCallback(token: string, cb: (data: Buffer) => void) {
-        this.postcbs[token] = cb;
+        this.postcbs.set(token, cb);
     }
 
 }

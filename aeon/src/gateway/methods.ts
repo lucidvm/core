@@ -113,6 +113,20 @@ export const capTables: Record<string, DispatchTable> = {
             const contact = await ctx.gw.config.getOption(ConfigKey.InstanceContact);
             ctx.send("instance", "LucidVM", process.env["npm_package_version"] ?? "0.0.0-unknown", name, sysop, contact);
         })
+    },
+    [GatewayCap.Routes]: {
+        routes: noauth(ctx => {
+            // TODO: make this dynamic
+            const routes: { [key: string]: string; } = {
+                "file": "/upload",
+                "lucid:api": "/api",
+                "lucid:hurl": "/audio",
+                "client:satori": "/",
+                "client:flashback": "/flashback"
+            };
+            const entries = Object.entries(routes);
+            ctx.send("routes", entries.length, ...entries.flat());
+        })
     }
 };
 

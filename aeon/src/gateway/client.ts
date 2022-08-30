@@ -104,7 +104,7 @@ export class ClientContext {
     }
 
     sanitize(str: string): string {
-        if (this.gwcaps[GatewayCap.DontSanitize]) return str;
+        if (this.gwcaps.get(GatewayCap.DontSanitize)) return str;
         return he.escape(str);
     }
 
@@ -148,7 +148,7 @@ export class ClientContext {
 
     sendPeers(peers: ClientContext[], leaving = false) {
         var data: [string, number?][] = peers.map(x => leaving ? [x.nick] : [x.nick, getLegacyRank(x.authcaps)]);
-        if (!this.gwcaps[GatewayCap.DontSanitize]) data.map(x => x[0] = this.sanitize(x[0]));
+        if (!this.gwcaps.get(GatewayCap.DontSanitize)) data.map(x => x[0] = this.sanitize(x[0]));
         this.send(leaving ? "remuser" : "adduser", peers.length, ...data.flat());
     }
 

@@ -16,9 +16,11 @@
     "typescript": "^4.8.2"
   },
   "dependencies": {
-    "@lucidvm/client": "link:../client",
+    "@lucidvm/shared": "https://github.com/lucidvm/shared",
     "bootstrap": "^5.2.0",
+    "canvas": "^2.9.3",
     "events": "^3.3.0",
+    "isomorphic-ws": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",

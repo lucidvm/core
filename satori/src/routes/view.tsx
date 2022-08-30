@@ -1,11 +1,10 @@
 import { createRef } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import { Col, Row } from "reactstrap";
 
 import { Controller } from "../controller";
 
 export function ViewSurrogate() {
-    return <Outlet />
+    return <div className="mt-5"><Outlet /></div>
 }
 
 interface MachineViewProps {
