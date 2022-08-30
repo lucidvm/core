@@ -35,7 +35,7 @@ export class Controller extends EventEmitter {
 
     async connect(room: string, server = getLocalServer()) {
         if (this.client.active) {
-            this.client.close();
+            await this.client.close();
         }
         this.client.open(server);
         this.client.once("ready", async () => {

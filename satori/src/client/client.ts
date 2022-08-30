@@ -347,15 +347,15 @@ export class CVMPClient extends EventEmitter {
     // disconnect from the event gateway
     close() {
         this.closing = true;
-        if (this.active) {
-            this.send("disconnect");
-            this.ws.close();
-        }
+        this.send("disconnect");
+        this.ws?.close();
+        return this.waitFor<void>("close");
     }
 
     // send a raw instruction
     send(...args: wireprim[]) {
-        this.ws.send(this.conduit.pack(...args));
+        if (!this.active) return;
+        this.ws?.send(this.conduit.pack(...args));
     }
 
     // wait for a particular instruction to arrive

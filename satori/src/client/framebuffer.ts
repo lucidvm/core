@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { Buffer } from "buffer";
 
 import { Canvas, createCanvas, loadImage } from "canvas";
 
